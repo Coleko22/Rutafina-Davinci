@@ -7,11 +7,10 @@ class RegistroForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'role', 'telefono')
+        fields = ('username', 'email', 'telefono')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Agregamos clases bootstrap básicas para estilizar inputs
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
 

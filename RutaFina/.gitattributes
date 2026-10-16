@@ -1,0 +1,16 @@
+# Normalizar finales de línea a LF para evitar conflictos entre Windows/Linux/Mac
+* text=auto eol=lf
+
+# Tratar archivos de código explícitamente como texto UTF-8
+*.py text diff=python eol=lf
+*.html text diff=html eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+
+# Archivos binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.sqlite3 binary
