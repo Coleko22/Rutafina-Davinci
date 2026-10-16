@@ -1,0 +1,21 @@
+# Entornos virtuales
+EntornoVirtual/
+venv/
+env/
+.env
+
+# Archivos de caché de Python
+*.pyc
+__pycache__/
+*.py[cod]
+
+# Base de datos local
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos multimedia subidos por usuarios (cuando agreguemos fotos de comida)
+/media/
+
+# Archivos del editor
+.vscode/
+.idea/
