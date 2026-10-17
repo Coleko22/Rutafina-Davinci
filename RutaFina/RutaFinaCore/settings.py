@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     # Apps del proyecto 
 
     'users',
+    'catalog',
+    'orders',
 ]
 
 MIDDLEWARE = [
