@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <a href="{% url 'metodos_pago' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver a métodos de pago</a>
+        
+        <div class="card shadow-sm border-0 border-top border-primary border-4">
+            <div class="card-body p-4 text-center">
+                <h4 class="fw-bold mb-1 text-primary">Checkout Mercado Pago 📱</h4>
+                <p class="text-muted small mb-4">Integración oficial para cobros inmediatos</p>
+
+                <div class="p-4 bg-light rounded-3 mb-4">
+                    <p class="fw-semibold mb-2">Escaneá para pagar con la app de Mercado Pago</p>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://www.mercadopago.com.ar" alt="QR MP" class="img-fluid rounded border p-2 bg-white">
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'metodos_pago' %}" class="btn btn-primary btn-lg" onclick="alert('Simulación: Pago acreditado en Mercado Pago.');">
+                        Pagar con Dinero en Cuenta
+                    </a>
+                    <a href="{% url 'metodos_pago' %}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

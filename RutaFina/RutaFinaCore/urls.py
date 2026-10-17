@@ -7,4 +7,5 @@ urlpatterns = [
     path('', home_catalogo_view, name='home'),
     path('auth/', include('users.urls')),
     path('catalogo/', include('catalog.urls')),
+    path('pagos/', include('orders.urls')),
 ]
