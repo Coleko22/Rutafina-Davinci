@@ -2,24 +2,40 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-6 col-lg-5">
         <a href="{% url 'metodos_pago' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver a métodos de pago</a>
         
-        <div class="card shadow-sm border-0 border-top border-primary border-4">
-            <div class="card-body p-4 text-center">
-                <h4 class="fw-bold mb-1 text-primary">Checkout Mercado Pago 📱</h4>
-                <p class="text-muted small mb-4">Integración oficial para cobros inmediatos</p>
+        <div class="card shadow-sm border-0 border-top border-primary border-4 text-center">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                    <span class="fs-4">📱</span>
+                    <h4 class="fw-bold text-primary mb-0">Mercado Pago Checkout</h4>
+                </div>
+                <p class="text-muted small mb-3">Escaneá el código o hacé clic abajo para pagar</p>
 
-                <div class="p-4 bg-light rounded-3 mb-4">
-                    <p class="fw-semibold mb-2">Escaneá para pagar con la app de Mercado Pago</p>
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://www.mercadopago.com.ar" alt="QR MP" class="img-fluid rounded border p-2 bg-white">
+                <!-- QR generado en Base64 localmente -->
+                <div class="p-3 bg-light rounded-3 d-inline-block border mb-3">
+                    <img src="{{ qr_data_uri }}" alt="QR Mercado Pago" class="img-fluid rounded" style="max-width: 200px;">
+                </div>
+
+                <div class="bg-light p-3 rounded mb-3 text-start small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Concepto:</span>
+                        <span class="fw-bold">Pedido RutaFina Delivery</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total a abonar:</span>
+                        <span class="fw-bold text-success fs-6">${{ monto }}</span>
+                    </div>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <a href="{% url 'metodos_pago' %}" class="btn btn-primary btn-lg" onclick="alert('Simulación: Pago acreditado en Mercado Pago.');">
-                        Pagar con Dinero en Cuenta
+                    <a href="{{ init_point }}" target="_blank" class="btn btn-primary">
+                        Abrir Checkout Mercado Pago
                     </a>
-                    <a href="{% url 'metodos_pago' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    <a href="{% url 'metodos_pago' %}" class="btn btn-outline-secondary btn-sm" onclick="alert('Simulación: Pago completado.');">
+                        Simular Confirmación
+                    </a>
                 </div>
             </div>
         </div>
