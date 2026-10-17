@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <a href="{% url 'mis_direcciones' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver a mis direcciones</a>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h3 class="card-title fw-bold mb-3">Agregar Dirección de Entrega</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-danger w-100 mt-2">Guardar Dirección</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
