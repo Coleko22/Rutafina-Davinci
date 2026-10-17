@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'home' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver al inicio</a>
+    <h2 class="fw-bold">Categoría: <span class="text-danger">{{ categoria_nombre }}</span></h2>
+    <p class="text-muted">Platos y productos disponibles en esta categoría</p>
+</div>
+
+<div class="row g-4">
+    {% for prod in productos %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column">
+                    <span class="badge bg-secondary mb-2 align-self-start">{{ prod.comercio.nombre }}</span>
+                    <h5 class="card-title fw-bold">{{ prod.nombre }}</h5>
+                    <p class="card-text text-muted small flex-grow-1">{{ prod.descripcion|default:"Sin descripción." }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <span class="fs-5 fw-bold text-dark">${{ prod.precio }}</span>
+                        <a href="{% url 'detalle_comercio' prod.comercio.id %}" class="btn btn-outline-danger btn-sm">Ver local</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">No se encontraron productos disponibles en esta categoría.</div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
