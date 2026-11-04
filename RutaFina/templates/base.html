@@ -1,30 +1,97 @@
-<!DOCTYPE html>
-<html lang="es">
+{% load static %}<!DOCTYPE html>
+<html lang="es"{% if modo_oscuro %} data-theme="dark"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RutaFina Delivery</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{% block title %}RABIA Delivery{% endblock %}</title>
+    <meta name="theme-color" content="#FC8413">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'rabia/rabia.css' %}">
+    <script src="{% static 'rabia/rabia.js' %}" defer></script>
+    {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">🛵 RutaFina</a>
-            <div class="d-flex align-items-center">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'mis_direcciones' %}" class="btn btn-outline-light btn-sm me-3">📍 Mis Direcciones</a>
-                    <a href="{% url 'metodos_pago' %}" class="btn btn-outline-light btn-sm me-2">💳 Medios de Pago</a>
-                    <span class="navbar-text me-3 text-white">Hola, {{ user.username }} ({{ user.get_role_display }})</span>
-                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Cerrar sesión</a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm me-2">Ingresar</a>
-                    <a href="{% url 'registro' %}" class="btn btn-light btn-sm">Registrarse</a>
-                {% endif %}
+<body class="{% block body_class %}{% endblock %}">
+    {% block header %}
+    <header class="rb-header">
+        <div class="rb-contenedor rb-header__fila">
+            {% block header_logo %}{% include 'includes/_logo_link.html' %}{% endblock %}
+
+            <div class="rb-header__centro">
+                {% block header_centro %}
+                    {# Dirección de entrega: se elige entre las guardadas (la principal queda marcada) #}
+                    {% if user.is_authenticated and cliente_actual %}
+                        <details class="rb-direccion">
+                            <summary>
+                                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" fill="none" stroke="#B4480A" stroke-width="2.4"/><circle cx="12" cy="10" r="2.6" fill="none" stroke="#B4480A" stroke-width="2.4"/></svg>
+                                <span class="rb-direccion__texto">
+                                    {% with principal=direcciones_header.0 %}{% if principal %}{{ principal.linea }}, {{ principal.localidad }}{% else %}Agregá tu dirección{% endif %}{% endwith %}
+                                </span>
+                                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                            </summary>
+                            <div class="rb-direccion__menu">
+                                {% for dir in direcciones_header %}
+                                    <form method="post" action="{% url 'direccion_principal' dir.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit" class="rb-direccion__opcion" aria-current="{{ dir.principal|yesno:'true,false' }}">
+                                            <strong>{{ dir.alias|default:"Dirección" }}</strong>
+                                            <small>{{ dir.linea }}, {{ dir.localidad }}</small>
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                                <a href="{% url 'agregar_direccion' %}?next={{ request.get_full_path|urlencode }}">+ Agregar dirección</a>
+                            </div>
+                        </details>
+                    {% endif %}
+
+                    <form class="rb-buscador" method="get" role="search" action="{% block buscar_action %}{% url 'buscar' %}{% endblock %}">
+                        <label class="rb-oculto" for="buscar-header">Buscar comida o comercios</label>
+                        <input id="buscar-header" type="search" name="q" value="{{ q|default:'' }}" maxlength="80" placeholder="{{ copy.buscar }}">
+                        <button type="submit">Buscar</button>
+                    </form>
+                {% endblock %}
+            </div>
+
+            <div class="rb-header__derecha">
+                {% block header_derecha %}
+                    {% with cuenta=carrito_header.cantidad_lineas %}
+                        <a class="rb-icono-btn"
+                           href="{% if carrito_header.slug %}{% url 'detalle_restaurante' carrito_header.slug %}#carrito{% else %}{% url 'home' %}#comercios{% endif %}"
+                           aria-label="Tu carrito{% if cuenta %}, {{ cuenta }} producto{{ cuenta|pluralize }}{% else %}, vacío{% endif %}">
+                            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h3l2.6 12.2h11L21 7H6.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="9" cy="19.5" r="1.7" fill="currentColor"/><circle cx="17" cy="19.5" r="1.7" fill="currentColor"/></svg>
+                            {% if cuenta %}<span class="rb-icono-btn__cuenta">{{ cuenta }}</span>{% endif %}
+                        </a>
+                    {% endwith %}
+                    {% include 'includes/_avatar_header.html' %}
+                {% endblock %}
             </div>
         </div>
-    </nav>
-    <main class="container">
+    </header>
+    {% block header_peligro %}{% endblock %}
+    {% endblock header %}
+
+    {% if messages %}
+        <div class="rb-contenedor rb-mensajes" role="status">
+            {% for message in messages %}
+                <p class="rb-mensaje{% if message.tags %} rb-mensaje--{{ message.tags }}{% endif %}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="{% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
+
+    {% block footer %}
+    <footer class="rb-footer">
+        <div class="rb-peligro rb-peligro--fina"></div>
+        <div class="rb-contenedor rb-footer__fila">
+            <p class="rb-footer__marca">Rabia // Comé y no rompas</p>
+            <p class="rb-footer__credito">Trabajo práctico · Grupo Alex, Colo y Thiago</p>
+        </div>
+    </footer>
+    {% endblock %}
 </body>
 </html>

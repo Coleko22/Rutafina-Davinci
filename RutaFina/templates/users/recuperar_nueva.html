@@ -1,0 +1,17 @@
+{% extends 'users/_simple_acceso.html' %}
+{% block title %}Nueva contraseña · RABIA{% endblock %}
+{% block tarjeta %}
+{% if validlink %}
+    <h1 class="rb-h2 rb-card__titulo">Elegí una contraseña nueva</h1>
+    <form method="post" class="rb-form" novalidate>
+        {% csrf_token %}
+        {% include 'includes/_campo.html' with field=form.new_password1 etiqueta='Contraseña nueva' %}
+        {% include 'includes/_campo.html' with field=form.new_password2 etiqueta='Repetila' %}
+        <button type="submit" class="rb-btn rb-btn--ancho">Cambiar contraseña</button>
+    </form>
+{% else %}
+    <h1 class="rb-h2 rb-card__titulo">Ese link ya no sirve</h1>
+    <p>Ya se usó o venció. Pedí uno nuevo.</p>
+    <a class="rb-btn rb-btn--chico rb-espacio-arriba" href="{% url 'password_reset' %}">Pedir otro link</a>
+{% endif %}
+{% endblock %}

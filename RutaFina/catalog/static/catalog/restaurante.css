@@ -1,0 +1,180 @@
+/*
+ * Página de restaurante (mockup "03 · Búsqueda, productos y carrito").
+ * Usa los tokens de static/rabia/rabia.css (se carga antes en base.html).
+ */
+
+/* ---------- Cabecera del restaurante ---------- */
+
+.rest-hero { border-bottom: var(--rb-borde); }
+
+.rest-hero__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 22px 26px;
+    padding-top: 44px;
+    padding-bottom: 44px;
+}
+
+.rest-logo {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 140px;
+    height: 140px;
+    border: var(--rb-borde);
+    background: var(--rb-500);
+    color: var(--rb-sobre-naranja);
+    box-shadow: 6px 6px 0 var(--rb-sombra);
+    font-family: var(--rb-display);
+    font-size: 64px;
+    line-height: 1;
+    transform: rotate(-3deg);
+}
+
+.rest-hero__texto { flex: 1; min-width: 260px; }
+
+.rest-titulo {
+    font-family: var(--rb-display);
+    font-weight: 400;
+    font-size: clamp(48px, 7.4vw, 104px);
+    line-height: .95;
+    text-transform: uppercase;
+}
+
+.rest-meta {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 14px;
+    border: var(--rb-borde-fino);
+    background: var(--rb-tarjeta);
+    font-size: 19px;
+}
+.rest-meta__rating { color: var(--rb-700); font-weight: 700; }
+
+.rest-fav { margin: 0 0 0 auto; text-decoration: none; }
+.rest-fav__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 26px;
+    border: var(--rb-borde);
+    background: var(--rb-tarjeta);
+    color: var(--rb-rojo);
+    box-shadow: var(--rb-sombra-chica);
+    font-family: var(--rb-cuerpo);
+    font-size: 19px;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    transform: var(--rb-sesgo);
+    cursor: pointer;
+}
+.rest-fav__btn[aria-pressed="true"] { background: var(--rb-rojo); color: #fff; }
+.rest-fav__btn svg { width: 20px; height: 20px; }
+
+/* ---------- Layout: carta + carrito ---------- */
+
+.rest-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 44px;
+    align-items: start;
+    padding-top: 44px;
+}
+
+.rest-resultados { margin-bottom: 24px; font-size: 18px; color: var(--rb-texto-2); }
+.rest-resultados strong { color: var(--rb-700); }
+
+.rest-tabs { margin-bottom: 30px; }
+
+.rest-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* ---------- Tarjeta de plato ---------- */
+
+.plato {
+    position: relative;
+    display: flex;
+    gap: 22px;
+    padding: 22px;
+    background: var(--rb-tarjeta);
+    border: var(--rb-borde-fino);
+    box-shadow: var(--rb-sombra-media);
+}
+
+.plato__thumb {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 140px;
+    height: 140px;
+    border: var(--rb-borde-fino);
+    color: var(--rb-600);
+    font-family: var(--rb-display);
+    font-size: 54px;
+    line-height: 1;
+}
+
+.plato__info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.plato__nombre {
+    padding-right: 34px; /* lugar para el corazón */
+    font-family: var(--rb-display);
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.plato__desc { margin-top: 6px; color: var(--rb-texto-2); font-size: 17px; line-height: 1.5; }
+
+.plato__aptos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.plato__apto {
+    padding: 2px 8px;
+    border: 2px solid var(--rb-verde);
+    color: var(--rb-verde);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.plato__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 16px;
+}
+.plato__pie form { margin: 0; }
+.plato__precio { font-size: 22px; font-weight: 700; }
+
+.plato .rb-fav { top: 14px; right: 14px; }
+.plato .rb-fav__btn { width: 32px; height: 32px; border-width: 2px; }
+.plato .rb-fav__btn svg { width: 16px; height: 16px; }
+
+.rest-vacio { padding: 28px; border: 2px dashed var(--rb-tinta); color: var(--rb-texto-2); font-size: 18px; }
+
+@media (max-width: 1180px) {
+    .rest-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+    .rest-layout { grid-template-columns: 1fr; }
+    .rest-fav { margin-left: 0; }
+}
+
+@media (max-width: 520px) {
+    .rest-logo { width: 96px; height: 96px; font-size: 44px; }
+    .plato { flex-direction: column; }
+    .plato__thumb { width: 100%; height: 110px; }
+}

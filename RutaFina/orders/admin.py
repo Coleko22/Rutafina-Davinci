@@ -7,9 +7,16 @@ class DetallePedidoInline(admin.TabularInline):
 
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente', 'comercio', 'estado', 'total', 'fecha_hora')
-    list_filter = ('estado', 'fecha_hora')
+    list_display = ('id', 'cliente', 'restaurante_nombre', 'estado', 'total', 'fecha_hora')
+    list_filter = ('estado', 'fecha_hora', 'restaurante_nombre')
     inlines = [DetallePedidoInline]
+
+    def save_model(self, request, obj, form, change):
+        # Si se cambia el estado desde el admin, se anotan las horas de la barra de seguimiento
+        if change and 'estado' in form.changed_data:
+            obj.cambiar_estado(obj.estado)
+        else:
+            super().save_model(request, obj, form, change)
 
 @admin.register(MetodoPago)
 class MetodoPagoAdmin(admin.ModelAdmin):
@@ -21,7 +28,7 @@ class PromocionAdmin(admin.ModelAdmin):
 
 @admin.register(Entrega)
 class EntregaAdmin(admin.ModelAdmin):
-    list_display = ('pedido', 'repartidor', 'estado_entrega', 'fecha_asignacion')
+    list_display = ('pedido', 'repartidor', 'estado_entrega', 'distancia_km', 'pago_repartidor', 'fecha_asignacion')
     list_filter = ('estado_entrega',)
 
 @admin.register(Pago)

@@ -1,0 +1,9 @@
+{# Avatar del header: lleva al perfil (o al panel si es repartidor). Sin sesión, botón "Entrá". #}
+{% if user.is_authenticated %}
+    <a class="rb-avatar" href="{% if user.es_repartidor %}{% url 'panel_repartidor' %}{% else %}{% url 'perfil' %}{% endif %}"
+       aria-label="Tu cuenta: {{ user.nombre_visible }}" title="{{ user.nombre_visible }}">
+        {% if user.foto %}<img src="{{ user.foto.url }}" alt="">{% else %}{{ user.iniciales }}{% endif %}
+    </a>
+{% else %}
+    <a class="rb-btn rb-btn--chico rb-btn--secundario" href="{% url 'login' %}">Entrá</a>
+{% endif %}

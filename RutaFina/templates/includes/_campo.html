@@ -1,0 +1,10 @@
+{# Campo de formulario con etiqueta, ayuda y error. Uso: {% include 'includes/_campo.html' with field=form.email %} #}
+<div class="rb-campo{% if field.errors %} rb-campo--error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ etiqueta|default:field.label }}</label>
+    {{ field }}
+    {% if field.errors %}
+        <p class="rb-campo__error" id="{{ field.id_for_label }}-error">{{ field.errors.0 }}</p>
+    {% elif field.help_text and mostrar_ayuda %}
+        <p class="rb-campo__ayuda">{{ field.help_text }}</p>
+    {% endif %}
+</div>

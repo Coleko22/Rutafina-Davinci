@@ -1,0 +1,4 @@
+<a class="rb-logo" href="{% url 'home' %}" aria-label="RABIA, ir al inicio">
+    {% include 'includes/_logo_svg.html' %}
+    <span class="rb-logo__texto">Rabia{% if extra %} <span class="rb-logo__extra">// {{ extra }}</span>{% endif %}</span>
+</a>

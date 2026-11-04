@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{# Layout de las pantallas de "¿Te la olvidaste?": mismo estilo que el login, sin header. #}
+{% block header %}<div class="rb-peligro" aria-hidden="true"></div>{% endblock %}
+{% block content %}
+<div class="rb-contenedor rb-pagina">
+    <div class="rb-simple">
+        <div class="rb-espacio-abajo">{% include 'includes/_logo_link.html' %}</div>
+        <section class="rb-card rb-card--padding">
+            {% block tarjeta %}{% endblock %}
+        </section>
+    </div>
+</div>
+{% endblock %}

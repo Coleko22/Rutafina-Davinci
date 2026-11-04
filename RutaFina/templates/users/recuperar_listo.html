@@ -1,0 +1,7 @@
+{% extends 'users/_simple_acceso.html' %}
+{% block title %}Contraseña cambiada · RABIA{% endblock %}
+{% block tarjeta %}
+<h1 class="rb-h2 rb-card__titulo">Contraseña cambiada</h1>
+<p class="rb-espacio-abajo">Ya podés ingresar con la nueva.</p>
+<a class="rb-btn" href="{% url 'login' %}">Entrar de una</a>
+{% endblock %}

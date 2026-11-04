@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Ingresar · RABIA{% endblock %}
+
+{# Esta pantalla no lleva header: solo la cinta de peligro arriba (como en el mockup) #}
+{% block header %}<div class="rb-peligro" aria-hidden="true"></div>{% endblock %}
+
+{% block content %}
+<div class="rb-contenedor rb-acceso">
+    <div class="rb-acceso__arriba">
+        <section class="rb-acceso__cartel" aria-label="RABIA">
+            {% include 'includes/_logo_link.html' %}
+            <h1 class="rb-display rb-acceso__grito">
+                <span>{{ copy.login_1 }}</span>
+                <span>{{ copy.login_2 }}</span>
+            </h1>
+            <p class="rb-acceso__bajada">Una cuenta, tus direcciones guardadas, tus favoritos y tu historial. Sin vueltas.</p>
+        </section>
+
+        <section class="rb-card rb-card--padding" aria-labelledby="titulo-ingresar">
+            <h2 class="rb-h2 rb-card__titulo" id="titulo-ingresar">Ingresar</h2>
+            <form method="post" action="{% url 'login' %}" class="rb-form" novalidate>
+                {% csrf_token %}
+                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                {% include 'includes/_campo.html' with field=login_form.username %}
+                {% include 'includes/_campo.html' with field=login_form.password %}
+                <div class="rb-acceso__olvido">
+                    <label class="rb-check">{{ login_form.recordarme }} Recordarme</label>
+                    <a href="{% url 'password_reset' %}">¿Te la olvidaste?</a>
+                </div>
+                <button type="submit" class="rb-btn rb-btn--ancho">Entrar de una</button>
+                {% if login_form.non_field_errors %}
+                    <p class="rb-error-box" role="alert">{{ login_form.non_field_errors.0 }}</p>
+                {% endif %}
+            </form>
+        </section>
+    </div>
+
+    <section class="rb-card rb-card--padding" aria-labelledby="titulo-registro" id="registro">
+        <h2 class="rb-h2 rb-card__titulo" id="titulo-registro">¿Nuevo? <span class="rb-naranja">Registrate</span></h2>
+        <form method="post" action="{% url 'registro' %}#registro" class="rb-form" novalidate>
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <div class="rb-form__fila">
+                {% include 'includes/_campo.html' with field=registro_form.first_name %}
+                {% include 'includes/_campo.html' with field=registro_form.last_name %}
+            </div>
+            {% include 'includes/_campo.html' with field=registro_form.email %}
+            {% include 'includes/_campo.html' with field=registro_form.telefono %}
+            {% include 'includes/_campo.html' with field=registro_form.password %}
+            <div class="rb-campo{% if registro_form.acepto.errors %} rb-campo--error{% endif %}">
+                <label class="rb-check">{{ registro_form.acepto }} {{ registro_form.acepto.label }}</label>
+                {% if registro_form.acepto.errors %}<p class="rb-campo__error">{{ registro_form.acepto.errors.0 }}</p>{% endif %}
+            </div>
+            <button type="submit" class="rb-btn rb-btn--secundario rb-btn--ancho rb-btn--sin-sombra">Crear cuenta</button>
+        </form>
+    </section>
+</div>
+{% endblock %}

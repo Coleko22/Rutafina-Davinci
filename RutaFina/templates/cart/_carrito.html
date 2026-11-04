@@ -1,0 +1,54 @@
+{% load catalog_extras %}
+{% comment %}
+Panel del carrito. Se incluye en la página del restaurante y también lo devuelve
+cart.views cuando el pedido viene por fetch (carrito.js lo reemplaza entero).
+Contexto: carrito (cart.carrito.Carrito) y next_url (a dónde volver tras un POST sin JS).
+{% endcomment %}
+<aside class="carrito rb-card rb-card--naranja rb-panel" id="carrito" aria-label="Tu carrito" aria-live="polite">
+    <div class="rb-peligro" aria-hidden="true"></div>
+    <div class="rb-panel__cuerpo">
+        <h2 class="carrito__titulo">Tu carrito <span class="carrito__cuenta">({{ carrito.cantidad_lineas }})</span></h2>
+
+        {% if carrito.vacio %}
+            <p class="carrito__vacio">{{ copy.vacio|default:"Todavía no agregaste nada. Elegí algo de la carta y aparece acá." }}</p>
+            <button type="button" class="rb-btn rb-btn--ancho rb-btn--grande carrito__pagar" disabled>Ir a pagar</button>
+        {% else %}
+            {% if carrito.restaurante.slug != restaurante.slug and restaurante %}
+                <p class="carrito__vacio">Es de <a href="{% url 'detalle_restaurante' carrito.restaurante.slug %}">{{ carrito.restaurante.nombre }}</a>.</p>
+            {% endif %}
+            {% for linea in carrito.lineas %}
+                <div class="carrito__linea">
+                    <div class="carrito__fila">
+                        <span class="carrito__nombre">{{ linea.item.nombre }}</span>
+                        <span class="carrito__monto">{{ linea.subtotal|pesos }}</span>
+                    </div>
+                    <div class="carrito__controles">
+                        <form method="post" action="{% url 'carrito_restar' linea.item.codigo %}" data-carrito-form>
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                            <button type="submit" class="carrito__qty-btn" data-foco="restar-{{ linea.item.codigo }}" aria-label="Quitar uno de {{ linea.item.nombre }}">&minus;</button>
+                        </form>
+                        <span class="carrito__qty" aria-label="Cantidad">{{ linea.cantidad }}</span>
+                        <form method="post" action="{% url 'carrito_agregar' carrito.slug linea.item.codigo %}" data-carrito-form>
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                            <button type="submit" class="carrito__qty-btn" data-foco="sumar-{{ linea.item.codigo }}" aria-label="Agregar uno de {{ linea.item.nombre }}">+</button>
+                        </form>
+                        <form method="post" action="{% url 'carrito_eliminar' linea.item.codigo %}" class="carrito__eliminar" data-carrito-form>
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                            <button type="submit" class="carrito__eliminar-btn" data-foco="eliminar-{{ linea.item.codigo }}" aria-label="Eliminar {{ linea.item.nombre }} del carrito">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% include 'cart/_totales.html' %}
+
+            <a href="{% url 'checkout' %}" class="rb-btn rb-btn--ancho rb-btn--grande carrito__pagar">
+                Ir a pagar
+                <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" focusable="false"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>
+            </a>
+        {% endif %}
+    </div>
+</aside>

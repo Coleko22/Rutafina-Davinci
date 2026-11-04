@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}Mis pedidos · RABIA{% endblock %}
+
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}{% include 'includes/_avatar_header.html' %}{% endblock %}
+
+{% block content %}
+<div class="rb-contenedor rb-pagina">
+    <h1 class="rb-h1">{{ copy.historial_1 }}<br><span class="rb-naranja">{{ copy.historial_2 }}</span></h1>
+
+    <nav aria-label="Secciones" class="rb-espacio-arriba">
+        <ul class="rb-chips">
+            <li><a class="rb-chip rb-chip--activa" href="#historial">Historial ({{ pedidos|length }})</a></li>
+            <li><a class="rb-chip" href="#favoritos">Favoritos ({{ favoritos|length }})</a></li>
+        </ul>
+    </nav>
+
+    <section class="rb-seccion" id="historial" aria-labelledby="titulo-historial">
+        <h2 class="rb-h2 rb-card__titulo" id="titulo-historial">Historial de pedidos</h2>
+        {% if pedidos %}
+            <ul class="rb-historial">
+                {% for pedido in pedidos %}
+                    <li class="rb-card rb-pedido-fila">
+                        <div class="rb-iniciales" aria-hidden="true">{{ pedido.restaurante_iniciales|default:"?" }}</div>
+                        <div class="rb-pedido-fila__info">
+                            <h3 class="rb-pedido-fila__nombre">{{ pedido.restaurante_nombre }}</h3>
+                            <p class="rb-pedido-fila__meta">
+                                #{{ pedido.id }} ·
+                                {% if pedido.fecha_hora|date:"Y-m-d" == hoy|date:"Y-m-d" %}Hoy {{ pedido.fecha_hora|time:"H:i" }}{% else %}{{ pedido.fecha_hora|date:"d/m H:i" }}{% endif %}
+                                · {{ pedido.cantidad_productos }} producto{{ pedido.cantidad_productos|pluralize }}
+                            </p>
+                        </div>
+                        <span class="rb-estado{% if pedido.estado == 'ENTREGADO' %} rb-estado--entregado{% elif pedido.estado == 'CANCELADO' %} rb-estado--cancelado{% else %} rb-estado--activo{% endif %}">{{ pedido.get_estado_display }}</span>
+                        <span class="rb-pedido-fila__total">{{ pedido.total|pesos }}</span>
+                        <div class="rb-pedido-fila__acciones">
+                            <a class="rb-btn-simple" href="{% url 'pedido_detalle' pedido.id %}">{% if pedido.activo %}Seguir pedido{% else %}Ver detalle{% endif %}</a>
+                            <form method="post" action="{% url 'repetir_pedido' pedido.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="rb-btn rb-btn--chico" aria-label="Repetir pedido #{{ pedido.id }} de {{ pedido.restaurante_nombre }}">Repetir</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="rb-vacio">
+                <p>Todavía no pediste nada. Cuando lo hagas, tus pedidos aparecen acá para repetirlos en un clic.</p>
+                <a class="rb-btn rb-btn--chico" href="{% url 'home' %}#comercios">Elegir un comercio</a>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="rb-seccion" id="favoritos" aria-labelledby="titulo-favoritos">
+        <h2 class="rb-h2 rb-card__titulo" id="titulo-favoritos">Favoritos <span class="rb-naranja">// Los que no te fallan</span></h2>
+        {% if favoritos %}
+            <ul class="rb-favoritos">
+                {% for f in favoritos %}
+                    <li class="rb-comercio">
+                        <div class="rb-comercio__tapa rb-rayado">
+                            <span class="rb-comercio__iniciales rb-comercio__iniciales--acento" aria-hidden="true">{% if f.item %}{{ f.item.codigo }}{% else %}{{ f.restaurante.iniciales }}{% endif %}</span>
+                            {% if f.item %}
+                                {% include 'includes/_fav_boton.html' with slug=f.restaurante.slug codigo=f.item.codigo activo=True nombre=f.item.nombre %}
+                            {% else %}
+                                {% include 'includes/_fav_boton.html' with slug=f.restaurante.slug codigo='' activo=True nombre=f.restaurante.nombre %}
+                            {% endif %}
+                        </div>
+                        <div class="rb-comercio__cuerpo">
+                            <p class="rb-comercio__tipo">{% if f.item %}Producto{% else %}Comercio{% endif %}</p>
+                            {% if f.item %}
+                                <h3 class="rb-comercio__nombre"><a href="{% url 'detalle_restaurante' f.restaurante.slug %}?categoria={{ f.item.categoria }}">{{ f.item.nombre }}</a></h3>
+                                <p class="rb-comercio__meta">{{ f.restaurante.nombre }} · {{ f.item.precio|pesos }}</p>
+                            {% else %}
+                                <h3 class="rb-comercio__nombre"><a href="{% url 'detalle_restaurante' f.restaurante.slug %}">{{ f.restaurante.nombre }}</a></h3>
+                                <p class="rb-comercio__meta">★ {{ f.restaurante.rating }} · {{ f.restaurante.tiempo_min }}–{{ f.restaurante.tiempo_max }} min</p>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="rb-vacio">
+                <p>Tocá el corazón de un comercio o de un plato y queda guardado acá.</p>
+                <a class="rb-btn rb-btn--chico" href="{% url 'home' %}#comercios">Ver comercios</a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,55 +1,25 @@
 {% extends 'base.html' %}
 
+{% block title %}Validar tarjeta · RABIA{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <a href="{% url 'metodos_pago' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver a métodos de pago</a>
-        
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h4 class="fw-bold mb-1">💳 Validador de Tarjetas</h4>
-                <p class="text-muted small mb-4">Verificación de número mediante Algoritmo de Luhn y fecha de caducidad.</p>
-
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger py-2 small">
-                        {{ form.non_field_errors.0 }}
-                    </div>
-                {% endif %}
-
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">{{ form.titular.label }}</label>
-                        {{ form.titular }}
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">{{ form.numero_tarjeta.label }}</label>
-                        {{ form.numero_tarjeta }}
-                        {% if form.numero_tarjeta.errors %}
-                            <div class="text-danger small mt-1">{{ form.numero_tarjeta.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-4">
-                            <label class="form-label fw-semibold small">{{ form.mes_vencimiento.label }}</label>
-                            {{ form.mes_vencimiento }}
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label fw-semibold small">{{ form.anio_vencimiento.label }}</label>
-                            {{ form.anio_vencimiento }}
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label fw-semibold small">{{ form.cvv.label }}</label>
-                            {{ form.cvv }}
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-danger w-100 mt-2">Validar y Simular Cobro</button>
-                </form>
+<div class="rb-contenedor rb-pagina">
+    <div class="rb-simple">
+        <h1 class="rb-h1 rb-pagina__titulo">Probá <span class="rb-naranja">tu tarjeta</span></h1>
+        <form method="post" class="rb-card rb-card--padding rb-form" novalidate>
+            {% csrf_token %}
+            <p class="rb-suave">Simulador: valida el número (algoritmo de Luhn), el emisor y el vencimiento. No se cobra nada.</p>
+            {% if form.non_field_errors %}<p class="rb-error-box" role="alert">{{ form.non_field_errors.0 }}</p>{% endif %}
+            {% include 'includes/_campo.html' with field=form.titular %}
+            {% include 'includes/_campo.html' with field=form.numero_tarjeta %}
+            <div class="rb-form__fila">
+                {% include 'includes/_campo.html' with field=form.mes_vencimiento %}
+                {% include 'includes/_campo.html' with field=form.anio_vencimiento %}
             </div>
-        </div>
+            {% include 'includes/_campo.html' with field=form.cvv %}
+            <button type="submit" class="rb-btn rb-btn--ancho">Validar tarjeta</button>
+            <a href="{% url 'metodos_pago' %}">Volver a medios de pago</a>
+        </form>
     </div>
 </div>
 {% endblock %}

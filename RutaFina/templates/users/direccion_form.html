@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} · RABIA{% endblock %}
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}<a class="rb-header__link" href="{% url 'perfil' %}#direcciones">Mi cuenta</a>{% endblock %}
+
+{% block content %}
+<div class="rb-contenedor rb-pagina">
+    <div class="rb-simple">
+        <h1 class="rb-h1 rb-pagina__titulo">{{ titulo }}</h1>
+        <form method="post" class="rb-card rb-card--padding rb-form" novalidate>
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            {% include 'users/_direccion_campos.html' %}
+            {% if not direccion.principal %}
+                <label class="rb-check"><input type="checkbox" name="principal" value="1"> Usar como dirección principal</label>
+            {% endif %}
+            <button type="submit" class="rb-btn rb-btn--ancho">Guardar dirección</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static catalog_extras %}
+
+{% block title %}Pagar · RABIA{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'cart/carrito.css' %}">{% endblock %}
+
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}
+    <ol class="rb-pasos" aria-label="Pasos de la compra">
+        <li class="hecho"><a href="{% url 'detalle_restaurante' carrito.slug %}#carrito">1 Carrito ✓</a></li>
+        <li class="actual" aria-current="step">2 Pago</li>
+        <li class="pendiente">3 Seguimiento</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+{% comment %}
+Formulario principal vacío: los campos de abajo se asocian con form="checkout". Así el
+formulario de "agregar dirección" puede quedar en el medio sin anidar formularios.
+{% endcomment %}
+<form id="checkout" method="post" action="{% url 'checkout' %}" novalidate>{% csrf_token %}</form>
+
+<div class="rb-contenedor rb-pagina">
+    <h1 class="rb-h1 rb-pagina__titulo">{{ copy.checkout_1 }} <span class="rb-naranja">{{ copy.checkout_2 }}</span></h1>
+
+    {% if form.non_field_errors %}<p class="rb-error-box rb-espacio-abajo" role="alert">{{ form.non_field_errors.0 }}</p>{% endif %}
+
+    <div class="rb-checkout">
+        <div class="rb-checkout__col">
+            <section class="rb-card rb-card--padding" aria-labelledby="titulo-direccion">
+                <h2 class="rb-h2 rb-card__titulo" id="titulo-direccion">¿A dónde lo llevamos?</h2>
+                {% if form.direccion.errors %}<p class="rb-campo__error rb-espacio-abajo">{{ form.direccion.errors.0 }}</p>{% endif %}
+
+                <fieldset class="rb-opciones rb-fieldset rb-espacio-abajo">
+                    <legend class="rb-oculto">Dirección de entrega</legend>
+                    {% for dir in direcciones %}
+                        <label class="rb-opcion">
+                            <input type="radio" name="direccion" value="{{ dir.id }}" form="checkout"
+                                   {% if form.direccion.value|stringformat:'s' == dir.id|stringformat:'s' %}checked{% endif %}>
+                            <span>
+                                <span class="rb-opcion__titulo">{{ dir.alias|default:"Dirección" }} · {{ dir.linea }}</span><br>
+                                <span class="rb-opcion__detalle">{{ dir.localidad }}{% if dir.referencia %} · {{ dir.referencia }}{% endif %}</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </fieldset>
+
+                <details class="rb-punteado"{% if not direcciones %} open{% endif %}>
+                    <summary>+ Agregar nueva dirección</summary>
+                    <form method="post" action="{% url 'agregar_direccion' %}" class="rb-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next_checkout }}">
+                        {% include 'users/_direccion_campos.html' with form=direccion_form %}
+                        <button type="submit" class="rb-btn rb-btn--secundario rb-btn--ancho rb-btn--plano rb-btn--sin-sombra">Guardar dirección</button>
+                    </form>
+                </details>
+            </section>
+
+            <section class="rb-card rb-card--padding" aria-labelledby="titulo-pago">
+                <h2 class="rb-h2 rb-card__titulo" id="titulo-pago">¿Cómo pagás?</h2>
+                <fieldset class="rb-opciones rb-opciones--tres rb-fieldset">
+                    <legend class="rb-oculto">Medio de pago</legend>
+                    {% for valor, nombre in metodos %}
+                        <label class="rb-opcion">
+                            <input type="radio" name="metodo" value="{{ valor }}" form="checkout" data-pago
+                                   {% if form.metodo.value == valor %}checked{% endif %}>
+                            <span class="rb-opcion__titulo">{{ nombre }}</span>
+                        </label>
+                    {% endfor %}
+                </fieldset>
+
+                <div class="rb-tarjeta-datos rb-form" data-datos-tarjeta>
+                    {% include 'includes/_campo.html' with field=form.numero_tarjeta %}
+                    {% include 'includes/_campo.html' with field=form.titular %}
+                    <div class="rb-form__fila">
+                        {% include 'includes/_campo.html' with field=form.vencimiento %}
+                        {% include 'includes/_campo.html' with field=form.cvv %}
+                    </div>
+                    <p class="rb-seguro">
+                        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+                        El cobro se procesa por la pasarela de pago. Rabia no guarda los datos de tu tarjeta.
+                    </p>
+                </div>
+                <p class="rb-suave rb-espacio-arriba">Con billetera virtual te mostramos el QR de Mercado Pago al confirmar. En efectivo, le pagás al repartidor.</p>
+            </section>
+        </div>
+
+        <aside class="rb-card rb-card--naranja rb-panel rb-resumen" aria-labelledby="titulo-resumen">
+            <div class="rb-peligro" aria-hidden="true"></div>
+            <div class="rb-panel__cuerpo">
+                <h2 class="rb-h2" id="titulo-resumen">Resumen</h2>
+                <p class="rb-suave rb-resumen__sub">{{ carrito.restaurante.nombre }} · llega en {{ carrito.restaurante.tiempo_min }}–{{ carrito.restaurante.tiempo_max }} min</p>
+                <ul class="rb-lineas">
+                    {% for linea in carrito.lineas %}
+                        <li><span>{{ linea.cantidad }} × {{ linea.item.nombre }}</span><span>{{ linea.subtotal|pesos }}</span></li>
+                    {% endfor %}
+                </ul>
+                {% include 'cart/_totales.html' %}
+
+                <button type="submit" form="checkout" class="rb-btn rb-btn--ancho rb-btn--grande rb-espacio-arriba">Confirmar pedido</button>
+                <p class="rb-resumen__nota">Al confirmar se cobra el total. Sin vuelta atrás.</p>
+
+                <form method="post" action="{% url 'carrito_cupon' %}" class="rb-cupon">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next_checkout }}">
+                    {% if carrito.cupon %}
+                        <span class="carrito__promo-codigo">{{ carrito.cupon.codigo }}</span>
+                        <button type="submit" name="quitar" value="1" class="rb-link-btn rb-link-btn--rojo">Quitar código</button>
+                    {% else %}
+                        <label class="rb-oculto" for="cupon">Código de descuento</label>
+                        <input id="cupon" name="codigo" placeholder="¿Tenés un código?" maxlength="20" autocomplete="off">
+                        <button type="submit" class="rb-btn-simple">Aplicar</button>
+                    {% endif %}
+                </form>
+                {% if carrito.aviso_cupon %}<p class="rb-cupon__aviso">{{ carrito.aviso_cupon }}</p>{% endif %}
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

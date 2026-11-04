@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}Buscar “{{ q }}” · RABIA{% endblock %}
+
+{% block content %}
+<div class="rb-contenedor rb-pagina">
+    <h1 class="rb-h2 rb-pagina__titulo">{{ resultados|length }} comercio{{ resultados|length|pluralize }} para <span class="rb-naranja">“{{ q }}”</span></h1>
+    {% if resultados %}
+        <ul class="rb-resultados">
+            {% for rest, items in resultados %}
+                <li class="rb-card rb-resultado">
+                    <div class="rb-iniciales" aria-hidden="true">{{ rest.iniciales }}</div>
+                    <div class="rb-resultado__info">
+                        <h2 class="rb-pedido-fila__nombre">{{ rest.nombre }}</h2>
+                        <p class="rb-pedido-fila__meta">{{ rest.cocina }} · {{ rest.tiempo_min }}–{{ rest.tiempo_max }} min · ★ {{ rest.rating }}</p>
+                        {% if items %}
+                            <p class="rb-resultado__items">{{ items|length }} plato{{ items|length|pluralize }}: {% for i in items|slice:":4" %}{{ i.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if items|length > 4 %}…{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <a class="rb-btn rb-btn--chico" href="{% url 'detalle_restaurante' rest.slug %}{% if items %}?q={{ q|urlencode }}{% endif %}">Ver carta</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="rb-vacio">
+            <p>No encontramos nada con “{{ q }}”. Probá con otra palabra, como “pizza” o “empanadas”.</p>
+            <a class="rb-btn rb-btn--chico" href="{% url 'home' %}#comercios">Ver todos los comercios</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

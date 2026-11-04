@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}Pagar con billetera · RABIA{% endblock %}
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}
+    <ol class="rb-pasos" aria-label="Pasos de la compra">
+        <li class="hecho">1 Carrito ✓</li>
+        <li class="actual" aria-current="step">2 Pago</li>
+        <li class="pendiente">3 Seguimiento</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<div class="rb-contenedor rb-pagina">
+    <div class="rb-simple">
+        <h1 class="rb-h1 rb-pagina__titulo">Escaneá <span class="rb-naranja">y listo.</span></h1>
+        <section class="rb-card rb-card--naranja rb-card--padding" aria-label="Pago con Mercado Pago">
+            <p class="rb-etiqueta">Pedido #{{ pedido.id }} · {{ pedido.restaurante_nombre }}</p>
+            <p class="rb-display rb-monto">{{ pedido.total|pesos }}</p>
+            <img class="rb-qr" src="{{ qr_data_uri }}" alt="Código QR para pagar el pedido #{{ pedido.id }} con Mercado Pago">
+            <p class="rb-suave rb-espacio-abajo">Escaneá el QR con la app de Mercado Pago o abrí el link desde el celu. Cuando se apruebe, volvés al seguimiento.</p>
+            <a class="rb-btn rb-btn--ancho" href="{{ init_point }}" target="_blank" rel="noopener">Abrir Mercado Pago</a>
+            {% if puede_simular %}
+                <form method="post" action="{% url 'pago_billetera_retorno' pedido.id %}" class="rb-espacio-arriba">
+                    {% csrf_token %}
+                    <input type="hidden" name="simular" value="1">
+                    <button type="submit" class="rb-btn-simple rb-ancho">Simular pago aprobado (solo en desarrollo)</button>
+                </form>
+            {% endif %}
+            <p class="rb-espacio-arriba"><a href="{% url 'pedido_detalle' pedido.id %}">Pagar después y ver el pedido</a></p>
+        </section>
+    </div>
+</div>
+{% endblock %}

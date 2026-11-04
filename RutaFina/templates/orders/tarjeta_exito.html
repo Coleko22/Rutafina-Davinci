@@ -1,21 +1,20 @@
 {% extends 'base.html' %}
 
+{% block title %}Tarjeta validada · RABIA{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center text-center">
-    <div class="col-md-5">
-        <div class="card shadow-sm border-0 p-4">
-            <div class="card-body">
-                <div class="fs-1 text-success mb-2">✅</div>
-                <h3 class="fw-bold mb-2">Tarjeta Validada con Éxito</h3>
-                <p class="text-muted">Los datos cumplen con el algoritmo de verificación y vigencia bancaria.</p>
-                <div class="bg-light p-3 rounded mb-4 text-start small">
-                    <p class="mb-1"><strong>Titular:</strong> {{ titular }}</p>
-                    <p class="mb-1"><strong>Emisor:</strong> {{ tipo }}</p>
-                    <p class="mb-0"><strong>Tarjeta:</strong> **** **** **** {{ ultimos4 }}</p>
-                </div>
-                <a href="{% url 'metodos_pago' %}" class="btn btn-outline-danger">Volver a Métodos de Pago</a>
-            </div>
-        </div>
+<div class="rb-contenedor rb-pagina">
+    <div class="rb-simple">
+        <section class="rb-card rb-card--padding">
+            <h1 class="rb-h2 rb-card__titulo">Tarjeta <span class="rb-naranja">validada</span></h1>
+            <p class="rb-espacio-abajo">Los datos pasan la verificación de Luhn y la tarjeta está vigente.</p>
+            <ul class="rb-lineas rb-espacio-abajo">
+                <li><span class="rb-suave">Titular</span><span>{{ titular }}</span></li>
+                <li><span class="rb-suave">Emisor</span><span>{{ tipo }}</span></li>
+                <li><span class="rb-suave">Tarjeta</span><span>•••• •••• •••• {{ ultimos4 }}</span></li>
+            </ul>
+            <a href="{% url 'metodos_pago' %}" class="rb-btn rb-btn--chico">Volver a medios de pago</a>
+        </section>
     </div>
 </div>
 {% endblock %}

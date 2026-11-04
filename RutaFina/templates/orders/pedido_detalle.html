@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}Pedido #{{ pedido.id }} · RABIA{% endblock %}
+{% block extra_head %}{% if auto_refresh %}<meta http-equiv="refresh" content="30">{% endif %}{% endblock %}
+
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}<a class="rb-header__link" href="{% url 'historial' %}">Mis pedidos</a>{% endblock %}
+
+{% block content %}
+<section class="rb-seg-hero{% if pedido.estado == 'ENTREGADO' %} rb-seg-hero--entregado{% elif pedido.estado == 'CANCELADO' %} rb-seg-hero--cancelado{% endif %}">
+    <div class="rb-contenedor rb-seg-hero__fila">
+        <div>
+            <p class="rb-seg-hero__cinta">Pedido #{{ pedido.id }} · Confirmado {{ pedido.fecha_hora|time:"H:i" }}</p>
+            <h1 class="rb-display rb-seg-hero__titulo">
+                {% if pedido.estado == 'ENTREGADO' %}
+                    <span>Llegó.</span><span>A comer.</span>
+                {% elif pedido.estado == 'CANCELADO' %}
+                    <span>Pedido</span><span>cancelado.</span>
+                {% else %}
+                    <span>{{ copy.seguimiento_1 }}</span><span>{{ copy.seguimiento_2 }}</span>
+                {% endif %}
+            </h1>
+        </div>
+        {% if pedido.activo and pedido.eta %}
+            <div class="rb-eta">
+                <p class="rb-eta__label">Llega aprox.</p>
+                <p class="rb-eta__hora">{{ pedido.eta|time:"H:i" }}</p>
+            </div>
+        {% elif pedido.estado == 'ENTREGADO' %}
+            <div class="rb-eta">
+                <p class="rb-eta__label">Entregado</p>
+                <p class="rb-eta__hora">{{ pedido.entregado_en|time:"H:i" }}</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="rb-contenedor rb-seg">
+    <div class="rb-seg__col">
+        <section class="rb-card rb-card--padding" aria-labelledby="titulo-estado">
+            <h2 class="rb-h2" id="titulo-estado">Estado del pedido</h2>
+
+            {% if pedido.estado == 'CANCELADO' %}
+                <p class="rb-error-box rb-espacio-arriba">Cancelaste este pedido a las {{ pedido.cancelado_en|time:"H:i" }}. No se cobró nada.</p>
+            {% else %}
+                <ol class="rb-progreso">
+                    {% for paso in pasos %}
+                        <li class="{{ paso.estado }}"{% if paso.estado == 'actual' %} aria-current="step"{% endif %}>
+                            <span class="rb-progreso__barra" aria-hidden="true"></span>
+                            <span class="rb-progreso__nombre">{{ paso.nombre }}</span>
+                            <span class="rb-progreso__hora">
+                                {% if paso.estado == 'actual' %}ahora{% elif paso.hora %}{{ paso.hora|time:"H:i" }}{% elif paso.clave == 'ENTREGADO' and pedido.eta %}~{{ pedido.eta|time:"H:i" }}{% else %}—{% endif %}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ol>
+
+                {% with m=pedido.mapa %}
+                <div class="rb-mapa rb-rayado" role="img" aria-label="Recorrido de {{ pedido.restaurante_nombre }} a tu casa: {{ pedido.get_estado_display|lower }}">
+                    <svg viewBox="0 0 1100 420" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                        <polyline points="{{ m.puntos }}" fill="none" stroke="#2B1606" stroke-width="5" stroke-dasharray="16 14"/>
+                        {% if m.hecho %}
+                            <polyline points="{{ m.puntos }}" pathLength="1000" fill="none" stroke="#FC8413" stroke-width="13"
+                                      stroke-linejoin="round" stroke-dasharray="{{ m.hecho }} 1000"/>
+                        {% endif %}
+                        <rect x="60" y="318" width="52" height="52" fill="#FC8413" stroke="#2B1606" stroke-width="5"/>
+                        <rect x="962" y="100" width="56" height="56" fill="#fff" stroke="#2B1606" stroke-width="6"/>
+                        {% if pedido.estado != 'ENTREGADO' %}
+                            <circle cx="{{ m.x }}" cy="{{ m.y }}" r="20" fill="#FFC572" stroke="#2B1606" stroke-width="9"/>
+                        {% endif %}
+                    </svg>
+                    <span class="rb-mapa__etiqueta rb-mapa__etiqueta--local">{{ pedido.restaurante_nombre }}</span>
+                    <span class="rb-mapa__etiqueta rb-mapa__etiqueta--casa">Tu casa</span>
+                </div>
+                {% endwith %}
+            {% endif %}
+        </section>
+
+        {% if repartidor %}
+            <section class="rb-card rb-repartidor-card" aria-label="Tu repartidor">
+                <div class="rb-iniciales rb-iniciales--naranja">{{ repartidor.usuario.iniciales }}</div>
+                <div class="rb-repartidor-card__info">
+                    <p class="rb-etiqueta">Tu repartidor</p>
+                    <p class="rb-repartidor-card__nombre">{{ repartidor.nombre_corto }} · {{ repartidor.vehiculo }}{% if repartidor.patente %} · {{ repartidor.patente }}{% endif %}</p>
+                </div>
+                {% if repartidor.usuario.telefono and pedido.activo %}
+                    <a class="rb-btn rb-btn--chico" href="tel:{{ repartidor.usuario.telefono|cut:' ' }}">Llamar</a>
+                {% endif %}
+            </section>
+        {% elif pedido.activo %}
+            <section class="rb-card rb-repartidor-card" aria-label="Tu repartidor">
+                <div class="rb-iniciales" aria-hidden="true">?</div>
+                <div class="rb-repartidor-card__info">
+                    <p class="rb-etiqueta">Tu repartidor</p>
+                    <p class="rb-repartidor-card__nombre">Buscando quién te lo lleve…</p>
+                </div>
+            </section>
+        {% endif %}
+    </div>
+
+    <aside class="rb-card rb-card--naranja rb-card--padding" aria-labelledby="titulo-detalle">
+        <h2 class="rb-h2 rb-card__titulo" id="titulo-detalle">Detalle</h2>
+        <ul class="rb-lineas">
+            {% for d in pedido.detalles.all %}
+                <li><span>{{ d.cantidad }} × {{ d.nombre }}</span><span>{{ d.subtotal|pesos }}</span></li>
+            {% endfor %}
+            {% if pedido.descuento_promo %}
+                <li class="rb-totales__promo"><span>Promo {{ pedido.promo_codigo }}</span><span>&minus; {{ pedido.descuento_promo|pesos }}</span></li>
+            {% endif %}
+            {% if pedido.descuento_cupon %}
+                <li class="rb-totales__promo"><span>Código {{ pedido.cupon_codigo }}</span><span>&minus; {{ pedido.descuento_cupon|pesos }}</span></li>
+            {% endif %}
+            <li><span>Envío</span><span>{{ pedido.envio|pesos }}</span></li>
+        </ul>
+        <dl class="rb-totales rb-espacio-arriba">
+            <dt class="rb-totales__total">Total</dt>
+            <dd class="rb-totales__total">{{ pedido.total|pesos }}</dd>
+        </dl>
+
+        <div class="rb-detalle__dato">
+            <p class="rb-etiqueta">Entrega en</p>
+            <p>{{ pedido.direccion_texto }}</p>
+        </div>
+        {% if pago %}
+            <div class="rb-detalle__dato">
+                <p class="rb-etiqueta">Pago</p>
+                <p>{{ pago.descripcion }} ·
+                    {% if pago.estado_pago == 'Aprobado' %}<span class="rb-ok">Aprobado</span>
+                    {% elif pago.estado_pago == 'Pendiente' %}<a href="{% url 'pago_billetera' pedido.id %}">Pendiente: pagar ahora</a>
+                    {% else %}<span class="rb-pendiente">{{ pago.get_estado_pago_display }}</span>{% endif %}
+                </p>
+            </div>
+        {% endif %}
+
+        {% if pedido.activo %}
+            <details class="rb-problema">
+                <summary class="rb-btn-simple rb-btn-simple--alerta">Tengo un problema</summary>
+                <div class="rb-problema__cuerpo">
+                    {% if pedido.cancelable %}
+                        <p>Todavía ningún repartidor lo tomó, así que podés cancelarlo sin costo.</p>
+                        <form method="post" action="{% url 'cancelar_pedido' pedido.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="rb-btn rb-btn--chico rb-btn--peligro">Cancelar pedido</button>
+                        </form>
+                    {% else %}
+                        <p>El pedido ya está en manos de {{ repartidor.nombre_corto|default:"un repartidor" }}, así que no se puede cancelar.
+                            {% if repartidor.usuario.telefono %}Llamalo al <a href="tel:{{ repartidor.usuario.telefono|cut:' ' }}">{{ repartidor.usuario.telefono }}</a>.{% endif %}</p>
+                    {% endif %}
+                </div>
+            </details>
+        {% else %}
+            <form method="post" action="{% url 'repetir_pedido' pedido.id %}" class="rb-espacio-arriba">
+                {% csrf_token %}
+                <button type="submit" class="rb-btn rb-btn--chico rb-btn--ancho">Repetir pedido</button>
+            </form>
+        {% endif %}
+    </aside>
+</div>
+{% endblock %}

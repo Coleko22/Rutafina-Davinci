@@ -1,0 +1,8 @@
+{% extends 'users/_simple_acceso.html' %}
+{% block title %}Revisá tu email · RABIA{% endblock %}
+{% block tarjeta %}
+<h1 class="rb-h2 rb-card__titulo">Revisá tu email</h1>
+<p>Si hay una cuenta con ese email, te llegó un link para cambiar la contraseña. Puede tardar unos minutos.</p>
+<p class="rb-suave rb-espacio-arriba">En desarrollo el email no se envía: aparece en la consola donde corre <code>runserver</code>.</p>
+<p class="rb-espacio-arriba"><a href="{% url 'login' %}">Volver a ingresar</a></p>
+{% endblock %}

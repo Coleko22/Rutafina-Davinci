@@ -1,0 +1,23 @@
+{% comment %}
+Corazón de favoritos (comercio o producto). Es un POST a users.views.favorito_toggle.
+Contexto: slug, codigo (opcional, para productos), activo (bool), nombre (para el aria-label), clase_btn (opcional).
+Sin sesión, lleva al login y vuelve a la página.
+{% endcomment %}
+{% if user.is_authenticated %}
+<form class="rb-fav" method="post" action="{% url 'favorito_toggle' %}">
+    {% csrf_token %}
+    <input type="hidden" name="slug" value="{{ slug }}">
+    <input type="hidden" name="codigo" value="{{ codigo|default:'' }}">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="rb-fav__btn" aria-pressed="{{ activo|yesno:'true,false' }}"
+            aria-label="{% if activo %}Quitar {{ nombre }} de favoritos{% else %}Agregar {{ nombre }} a favoritos{% endif %}">
+        {% include 'includes/_icono_corazon.html' with lleno=activo %}
+    </button>
+</form>
+{% else %}
+<div class="rb-fav">
+    <a class="rb-fav__btn" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" aria-label="Ingresá para guardar {{ nombre }} en favoritos">
+        {% include 'includes/_icono_corazon.html' with lleno=False %}
+    </a>
+</div>
+{% endif %}

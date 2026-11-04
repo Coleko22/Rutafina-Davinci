@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static catalog_extras %}
+
+{% block title %}{{ restaurante.nombre }} · RABIA{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'catalog/restaurante.css' %}">
+    <link rel="stylesheet" href="{% static 'cart/carrito.css' %}">
+    <script src="{% static 'cart/carrito.js' %}" defer></script>
+{% endblock %}
+
+{% block body_class %}pagina-restaurante{% endblock %}
+
+{# En esta página el buscador del header busca dentro de la carta del restaurante #}
+{% block buscar_action %}{% url 'detalle_restaurante' restaurante.slug %}{% endblock %}
+
+{% block content %}
+<header class="rest-hero rb-rayado">
+    <div class="rb-contenedor rest-hero__fila">
+        <div class="rest-logo" aria-hidden="true">{{ restaurante.iniciales }}</div>
+        <div class="rest-hero__texto">
+            <h1 class="rest-titulo">{{ restaurante.nombre }}</h1>
+            <p class="rest-meta">
+                <span class="rest-meta__rating">★ {{ restaurante.rating }}</span>
+                · {{ restaurante.cocina }}
+                · {{ restaurante.tiempo_min }}–{{ restaurante.tiempo_max }} min
+                · {% if restaurante.costo_envio %}Envío {{ restaurante.costo_envio|pesos|cut:" " }}{% else %}Envío gratis{% endif %}
+                · Abierto hasta {{ restaurante.cierre }}
+            </p>
+        </div>
+
+        {% with clave=restaurante.slug|add:':' %}{% with es_fav=clave|en:favoritos %}
+            {% if user.is_authenticated %}
+                <form class="rest-fav" method="post" action="{% url 'favorito_toggle' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="slug" value="{{ restaurante.slug }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="rest-fav__btn" aria-pressed="{{ es_fav|yesno:'true,false' }}">
+                        {% include 'includes/_icono_corazon.html' with lleno=True %}
+                        {% if es_fav %}En favoritos{% else %}Guardar en favoritos{% endif %}
+                    </button>
+                </form>
+            {% else %}
+                <a class="rest-fav rest-fav__btn" href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">
+                    {% include 'includes/_icono_corazon.html' with lleno=False %} Guardar en favoritos
+                </a>
+            {% endif %}
+        {% endwith %}{% endwith %}
+    </div>
+</header>
+
+<div class="rb-contenedor rest-layout">
+    <section class="rest-carta" aria-label="Carta de {{ restaurante.nombre }}">
+        {% if q %}
+            <p class="rest-resultados">
+                {{ items|length }} resultado{{ items|length|pluralize }} para
+                <strong>“{{ q }}”</strong> en {{ restaurante.nombre }}
+                · <a href="{% url 'detalle_restaurante' restaurante.slug %}">Ver toda la carta</a>
+            </p>
+        {% endif %}
+
+        <nav class="rest-tabs" aria-label="Categorías">
+            <ul class="rb-chips">
+                {% for cat in restaurante.categorias %}
+                    <li><a class="rb-chip rest-tab{% if cat.slug == categoria_activa %} rb-chip--activa rest-tab--activa{% endif %}"
+                           href="?categoria={{ cat.slug }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+                           {% if cat.slug == categoria_activa %}aria-current="page"{% endif %}>{{ cat.nombre }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        {% if items %}
+            <ul class="rest-grid">
+                {% for item in items %}
+                    <li class="plato">
+                        <div class="plato__thumb rb-rayado" aria-hidden="true">{{ item.codigo }}</div>
+                        <div class="plato__info">
+                            <h2 class="plato__nombre">{{ item.nombre }}</h2>
+                            <p class="plato__desc">{{ item.descripcion }}</p>
+                            {% with aptos=item.etiquetas|interseca:restricciones %}
+                                {% if aptos %}
+                                    <p class="plato__aptos">{% for a in aptos %}<span class="plato__apto">Apto {{ a }}</span>{% endfor %}</p>
+                                {% endif %}
+                            {% endwith %}
+                            <div class="plato__pie">
+                                <span class="plato__precio">{{ item.precio|pesos }}</span>
+                                <form method="post" action="{% url 'carrito_agregar' restaurante.slug item.codigo %}" data-carrito-form
+                                      {% if carrito.restaurante and carrito.restaurante.slug != restaurante.slug %}data-confirm="Tu carrito tiene productos de {{ carrito.restaurante.nombre }}. ¿Lo vaciamos y empezamos un pedido en {{ restaurante.nombre }}?"{% endif %}>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ next_url }}">
+                                    <button type="submit" class="rb-btn rb-btn--chico" aria-label="Agregar {{ item.nombre }} al carrito">+ Agregar</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% with clave=restaurante.slug|add:':'|add:item.codigo %}
+                            {% include 'includes/_fav_boton.html' with slug=restaurante.slug codigo=item.codigo activo=clave|en:favoritos nombre=item.nombre %}
+                        {% endwith %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="rest-vacio">
+                No encontramos nada con esa búsqueda.
+                <a href="{% url 'detalle_restaurante' restaurante.slug %}">Ver la carta completa</a>
+            </p>
+        {% endif %}
+    </section>
+
+    {% include 'cart/_carrito.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{# Campos de DireccionForm. Se usan en el checkout ("+ Agregar nueva dirección") y en agregar/editar dirección. #}
+<div class="rb-form__fila">
+    {% include 'includes/_campo.html' with field=form.calle etiqueta='Calle' %}
+    {% include 'includes/_campo.html' with field=form.numero %}
+</div>
+<div class="rb-form__fila">
+    {% include 'includes/_campo.html' with field=form.piso_depto %}
+    {% include 'includes/_campo.html' with field=form.codigo_postal %}
+</div>
+<div class="rb-form__fila">
+    {% include 'includes/_campo.html' with field=form.alias %}
+    {% include 'includes/_campo.html' with field=form.localidad %}
+</div>
+{% include 'includes/_campo.html' with field=form.referencia %}

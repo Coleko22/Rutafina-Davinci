@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'users',
     'catalog',
     'orders',
+    'cart',
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Datos del header (carrito, direcciones, tono, modo oscuro) en todas las páginas
+                'users.context_processors.rabia',
             ],
         },
     },
@@ -112,9 +115,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ar'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 
 USE_I18N = True
 
@@ -125,6 +128,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+# CSS/JS globales del sistema de diseño (static/rabia/). Cada app sigue teniendo su carpeta static/.
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Archivos subidos por los usuarios (fotos de perfil)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Email
@@ -137,6 +146,8 @@ MAILERS = {
 }
 
 LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+DEFAULT_FROM_EMAIL = 'RABIA Delivery <no-responder@rabia.local>'
 
 AUTH_USER_MODEL = 'users.User'
 

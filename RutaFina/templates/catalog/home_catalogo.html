@@ -1,49 +1,132 @@
 {% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}RABIA · Delivery sin paciencia{% endblock %}
+
+{% block header_peligro %}<div class="rb-peligro" aria-hidden="true"></div>{% endblock %}
 
 {% block content %}
-<div class="mb-5">
-    <div class="p-4 bg-white rounded-3 shadow-sm mb-4">
-        <h1 class="h3 fw-bold text-danger mb-2">Pedí lo que quieras en RutaFina 🛵</h1>
-        <p class="text-muted mb-0">Elegí tu categoría preferida o explorá los comercios destacados.</p>
-    </div>
-
-    <!-- Sección de Categorías -->
-    <h4 class="fw-bold mb-3">Categorías populares</h4>
-    <div class="d-flex flex-wrap gap-2 mb-5">
-        {% for cat in categorias %}
-            <a href="{% url 'productos_por_categoria' cat %}" class="btn btn-outline-danger rounded-pill px-3 py-2">
-                🍕 {{ cat }}
-            </a>
-        {% empty %}
-            <div class="alert alert-light text-muted w-100">
-                No hay categorías cargadas aún. Podés darlas de alta con productos en el panel de administración.
+<section class="rb-hero">
+    <div class="rb-contenedor rb-hero__fila">
+        <div>
+            <p class="rb-hero__cinta">Delivery sin paciencia</p>
+            <h1 class="rb-display rb-hero__titulo">
+                <span>{{ copy.hero_1 }}</span>
+                <span class="rb-naranja">{{ copy.hero_2 }}</span>
+            </h1>
+            <p class="rb-hero__bajada">{{ copy.hero_sub }}</p>
+            <div class="rb-hero__acciones">
+                <a class="rb-btn" href="#comercios">
+                    {{ copy.cta }}
+                    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></svg>
+                </a>
+                {% if user.is_authenticated %}
+                    <a class="rb-btn rb-btn--blanco" href="{% url 'historial' %}">Mis pedidos</a>
+                {% else %}
+                    <a class="rb-btn rb-btn--blanco" href="{% url 'login' %}">Entrá</a>
+                {% endif %}
             </div>
-        {% endfor %}
+        </div>
+        {% include 'includes/_cara_grande.html' %}
     </div>
+</section>
 
-    <!-- Sección de Comercios -->
-    <h4 class="fw-bold mb-3">Comercios disponibles</h4>
-    <div class="row g-4">
-        {% for com in comercios %}
-            <div class="col-md-4 col-sm-6">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title fw-bold">{{ com.nombre }}</h5>
-                        <p class="card-text text-muted small mb-2">📍 {{ com.direccion }}</p>
-                        <p class="card-text text-muted small mb-3">📞 {{ com.telefono }}</p>
-                        <div class="mt-auto">
-                            <a href="{% url 'detalle_comercio' com.id %}" class="btn btn-danger w-100">Ver carta</a>
-                        </div>
+<div class="rb-contenedor">
+    <section class="rb-seccion" aria-labelledby="titulo-promos">
+        <div class="rb-seccion__cabecera">
+            <h2 class="rb-h2" id="titulo-promos">Promos vigentes <span class="rb-naranja">// Aprovechá</span></h2>
+        </div>
+        <ul class="rb-promos rb-lista-limpia">
+            {% for promo in promos %}
+                <li class="rb-promo">
+                    <p class="rb-promo__titulo">{{ promo.titulo }}</p>
+                    <p class="rb-promo__sub">{{ promo.subtitulo }}</p>
+                    <p class="rb-promo__desc">{{ promo.descripcion }}</p>
+                    <div class="rb-promo__pie">
+                        <span class="rb-codigo">{{ promo.codigo }}</span>
+                        <span>{{ promo.vence }}</span>
                     </div>
-                </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="rb-seccion" aria-labelledby="titulo-categorias">
+        <h2 class="rb-h2 rb-card__titulo" id="titulo-categorias">Categorías</h2>
+        <nav aria-label="Filtrar comercios por categoría">
+            <ul class="rb-chips">
+                <li><a class="rb-chip{% if not rubro_activo %} rb-chip--activa{% endif %}" href="?orden={{ orden }}#comercios"{% if not rubro_activo %} aria-current="page"{% endif %}>Todo</a></li>
+                {% for r in rubros %}
+                    <li><a class="rb-chip{% if r.slug == rubro_activo %} rb-chip--activa{% endif %}"
+                           href="?categoria={{ r.slug }}&amp;orden={{ orden }}#comercios"
+                           {% if r.slug == rubro_activo %}aria-current="page"{% endif %}>{{ r.nombre }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </section>
+
+    <section class="rb-seccion" id="comercios" aria-labelledby="titulo-comercios">
+        <div class="rb-seccion__cabecera">
+            <h2 class="rb-h2" id="titulo-comercios">Comercios cerca <span class="rb-naranja">(y apurados)</span></h2>
+            <form method="get" action="#comercios" class="rb-ordenar">
+                {% if rubro_activo %}<input type="hidden" name="categoria" value="{{ rubro_activo }}">{% endif %}
+                <label for="orden" class="rb-suave">Ordenar</label>
+                <select id="orden" name="orden" class="rb-select" data-autosubmit>
+                    {% for clave, nombre in ordenes %}
+                        <option value="{{ clave }}"{% if clave == orden %} selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="rb-btn-simple" data-autosubmit-btn>Ordenar</button>
+            </form>
+        </div>
+
+        {% if restaurantes %}
+            <ul class="rb-comercios">
+                {% for rest in restaurantes %}
+                    <li class="rb-comercio">
+                        <div class="rb-comercio__tapa rb-rayado">
+                            {% if rest.badge %}<span class="rb-badge rb-comercio__badge">{{ rest.badge }}</span>{% endif %}
+                            <span class="rb-comercio__iniciales{% if rest.acento %} rb-comercio__iniciales--acento{% endif %}" aria-hidden="true">{{ rest.iniciales }}</span>
+                            {% with clave=rest.slug|add:':' %}
+                                {% include 'includes/_fav_boton.html' with slug=rest.slug codigo='' activo=clave|en:favoritos nombre=rest.nombre %}
+                            {% endwith %}
+                        </div>
+                        <div class="rb-comercio__cuerpo">
+                            <h3 class="rb-comercio__nombre"><a href="{% url 'detalle_restaurante' rest.slug %}">{{ rest.nombre }}</a></h3>
+                            <p class="rb-comercio__meta">{{ rest.cocina }} · {{ rest.tiempo_min }}–{{ rest.tiempo_max }} min</p>
+                            <p class="rb-comercio__datos">
+                                <span class="rb-rating">★ {{ rest.rating }}</span> ·
+                                {% if rest.costo_envio %}Envío {{ rest.costo_envio|pesos|cut:" " }}{% else %}Envío gratis{% endif %}
+                            </p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="rb-vacio">
+                <p>No hay comercios abiertos en esta categoría ahora.</p>
+                <a class="rb-btn rb-btn--chico" href="{% url 'home' %}#comercios">Ver todos</a>
             </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    No hay comercios activos en este momento. Cargá algunos desde <code>/admin/</code>.
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+        {% endif %}
+    </section>
+
+    {% if comercios %}
+        <section class="rb-seccion" aria-labelledby="titulo-otros">
+            <h2 class="rb-h2 rb-card__titulo" id="titulo-otros">Más comercios</h2>
+            <ul class="rb-comercios">
+                {% for com in comercios %}
+                    <li class="rb-comercio">
+                        <div class="rb-comercio__tapa rb-rayado">
+                            <span class="rb-comercio__iniciales" aria-hidden="true">{{ com.nombre|iniciales }}</span>
+                        </div>
+                        <div class="rb-comercio__cuerpo">
+                            <h3 class="rb-comercio__nombre"><a href="{% url 'detalle_comercio' com.id %}">{{ com.nombre }}</a></h3>
+                            <p class="rb-comercio__meta">{{ com.direccion }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
 </div>
 {% endblock %}

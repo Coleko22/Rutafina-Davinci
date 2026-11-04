@@ -1,0 +1,12 @@
+{% extends 'users/_simple_acceso.html' %}
+{% block title %}Recuperar contraseña · RABIA{% endblock %}
+{% block tarjeta %}
+<h1 class="rb-h2 rb-card__titulo">¿Te la olvidaste?</h1>
+<p class="rb-espacio-abajo">Poné tu email y te mandamos un link para elegir una contraseña nueva.</p>
+<form method="post" class="rb-form" novalidate>
+    {% csrf_token %}
+    {% include 'includes/_campo.html' with field=form.email etiqueta='Email' %}
+    <button type="submit" class="rb-btn rb-btn--ancho">Mandame el link</button>
+</form>
+<p class="rb-espacio-arriba"><a href="{% url 'login' %}">Volver a ingresar</a></p>
+{% endblock %}

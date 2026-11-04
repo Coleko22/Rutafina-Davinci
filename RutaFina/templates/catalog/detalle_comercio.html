@@ -1,38 +1,26 @@
 {% extends 'base.html' %}
+{% load catalog_extras %}
+
+{% block title %}{{ comercio.nombre }} · RABIA{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <a href="{% url 'home' %}" class="btn btn-link text-decoration-none text-danger p-0 mb-3">&larr; Volver a comercios</a>
-    <div class="p-4 bg-white rounded-3 shadow-sm border-start border-danger border-5">
-        <h2 class="fw-bold mb-1">{{ comercio.nombre }}</h2>
-        <p class="text-muted mb-1">📍 {{ comercio.direccion }} | 📞 {{ comercio.telefono }}</p>
-        <span class="badge bg-success">Abierto</span>
-    </div>
-</div>
-
-<h4 class="fw-bold mb-3">Menú / Productos</h4>
-<div class="row g-4 mb-5">
-    {% for prod in productos %}
-        <div class="col-md-4 col-sm-6">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body d-flex flex-column">
-                    <span class="badge bg-light text-dark border align-self-start mb-2">{{ prod.categoria }}</span>
-                    <h5 class="card-title fw-bold">{{ prod.nombre }}</h5>
-                    <p class="card-text text-muted small flex-grow-1">{{ prod.descripcion|default:"Sin descripción." }}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                        <span class="fs-5 fw-bold text-dark">${{ prod.precio }}</span>
-                        <!-- Botón preparado para cuando Colo integre el carrito -->
-                        <button class="btn btn-sm btn-danger" disabled title="Se habilita con la integración del carrito">
-                            Agregar
-                        </button>
+<div class="rb-contenedor rb-pagina">
+    <h1 class="rb-h1">{{ comercio.nombre }}</h1>
+    <p class="rb-suave rb-espacio-abajo">{{ comercio.direccion }} · {{ comercio.telefono }}</p>
+    {% if productos %}
+        <ul class="rb-resultados">
+            {% for prod in productos %}
+                <li class="rb-card rb-resultado">
+                    <div class="rb-resultado__info">
+                        <h2 class="rb-pedido-fila__nombre">{{ prod.nombre }}</h2>
+                        <p class="rb-pedido-fila__meta">{{ prod.categoria }}{% if prod.descripcion %} · {{ prod.descripcion }}{% endif %}</p>
                     </div>
-                </div>
-            </div>
-        </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">Este comercio no tiene productos cargados por ahora.</div>
-        </div>
-    {% endfor %}
+                    <span class="rb-pedido-fila__total">{{ prod.precio|pesos }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="rb-vacio"><p>Este comercio todavía no cargó productos.</p></div>
+    {% endif %}
 </div>
 {% endblock %}

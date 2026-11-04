@@ -1,0 +1,18 @@
+{% load catalog_extras %}
+{# Subtotal, envío, descuentos y total del carrito. Se usa en el panel del carrito y en el resumen del checkout. #}
+<dl class="rb-totales">
+    <dt>Subtotal</dt>
+    <dd>{{ carrito.subtotal|pesos }}</dd>
+    <dt>Envío</dt>
+    <dd>{{ carrito.envio|pesos }}</dd>
+    {% if carrito.promo %}
+        <dt><span class="carrito__promo-codigo">Promo {{ carrito.promo.codigo }}</span></dt>
+        <dd class="rb-totales__promo">&minus; {{ carrito.descuento_promo|pesos }}</dd>
+    {% endif %}
+    {% if carrito.cupon and carrito.descuento_cupon %}
+        <dt><span class="carrito__promo-codigo">{{ carrito.cupon.codigo }}</span></dt>
+        <dd class="rb-totales__promo">&minus; {{ carrito.descuento_cupon|pesos }}</dd>
+    {% endif %}
+    <dt class="rb-totales__total">Total</dt>
+    <dd class="rb-totales__total">{{ carrito.total|pesos }}</dd>
+</dl>

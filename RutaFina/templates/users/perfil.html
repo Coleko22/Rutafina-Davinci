@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi cuenta · RABIA{% endblock %}
+
+{% block header_centro %}{% endblock %}
+{% block header_derecha %}<a class="rb-header__link" href="{% url 'historial' %}">Mis pedidos</a>{% endblock %}
+
+{% block content %}
+<form id="perfil" class="rb-form-ancla" method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}</form>
+<div class="rb-contenedor rb-perfil">
+    <nav aria-label="Secciones de tu cuenta">
+        <ul class="rb-perfil__menu">
+            <li><a href="#datos" aria-current="true">Mis datos</a></li>
+            <li><a href="#direcciones">Direcciones</a></li>
+            <li><a href="#preferencias">Preferencias</a></li>
+            <li><a href="{% url 'historial' %}#favoritos">Favoritos</a></li>
+            <li>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Cerrar sesión</button>
+                </form>
+            </li>
+        </ul>
+    </nav>
+
+    {% comment %}
+    Un solo formulario para "Mis datos" y "Preferencias" (un único botón Guardar cambios, como en el mockup).
+    La tarjeta de direcciones queda fuera: sus acciones son formularios propios.
+    {% endcomment %}
+
+    <div class="rb-perfil__cards">
+        <section class="rb-card rb-card--padding" id="datos" aria-labelledby="titulo-datos">
+            <div class="rb-perfil__cabecera">
+                <div class="rb-perfil__foto" data-foto-preview aria-hidden="true">
+                    {% if user.foto %}<img src="{{ user.foto.url }}" alt="">{% else %}{{ user.iniciales }}{% endif %}
+                </div>
+                <div>
+                    <h1 class="rb-display rb-perfil__nombre" id="titulo-datos">{{ user.nombre_visible }}</h1>
+                    <p class="rb-perfil__desde">Cliente desde {{ cliente.fecha_registro|date:"F Y"|lower }} · {{ cantidad_pedidos }} pedido{{ cantidad_pedidos|pluralize }}</p>
+                    <label class="rb-subir-foto">
+                        {{ perfil_form.foto.as_widget }}
+                        <span class="rb-btn-simple">Cambiar foto</span>
+                    </label>
+                    {% if perfil_form.foto.errors %}<p class="rb-campo__error">{{ perfil_form.foto.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+            <div class="rb-form">
+                <div class="rb-form__fila">
+                    {% include 'includes/_campo.html' with field=perfil_form.first_name %}
+                    {% include 'includes/_campo.html' with field=perfil_form.last_name %}
+                </div>
+                <div class="rb-form__fila">
+                    {% include 'includes/_campo.html' with field=perfil_form.email %}
+                    {% include 'includes/_campo.html' with field=perfil_form.telefono %}
+                </div>
+            </div>
+        </section>
+
+        <section class="rb-card rb-card--padding" id="direcciones" aria-labelledby="titulo-direcciones">
+            <div class="rb-seccion__cabecera">
+                <h2 class="rb-h2" id="titulo-direcciones">Direcciones guardadas</h2>
+                <a class="rb-btn rb-btn--chico" href="{% url 'agregar_direccion' %}">+ Nueva</a>
+            </div>
+            {% if direcciones %}
+                <ul class="rb-dir-lista">
+                    {% for dir in direcciones %}
+                        <li>
+                            <span><strong>{{ dir.alias|default:"Dirección" }}</strong> · {{ dir.linea }}</span>
+                            <span class="rb-dir-lista__acciones">
+                                {% if dir.principal %}
+                                    <span class="rb-badge rb-badge--suave">Principal</span>
+                                {% else %}
+                                    <form method="post" action="{% url 'direccion_principal' dir.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'perfil' %}#direcciones">
+                                        <button type="submit" class="rb-link-btn">Hacer principal</button>
+                                    </form>
+                                {% endif %}
+                                <a href="{% url 'editar_direccion' dir.id %}">Editar</a>
+                                <form method="post" action="{% url 'eliminar_direccion' dir.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="rb-link-btn rb-link-btn--rojo" aria-label="Eliminar {{ dir.alias|default:dir.linea }}">Eliminar</button>
+                                </form>
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="rb-suave">Todavía no guardaste direcciones. Agregá una y la usamos en tus pedidos.</p>
+            {% endif %}
+        </section>
+
+        <section class="rb-card rb-card--padding" id="preferencias" aria-labelledby="titulo-preferencias">
+            <h2 class="rb-h2 rb-card__titulo" id="titulo-preferencias">Preferencias</h2>
+
+            <fieldset class="rb-fieldset">
+                <legend class="rb-etiqueta">Tono de la app</legend>
+                <div class="rb-tonos">
+                    {% for valor, nombre in preferencias_form.fields.tono.choices %}
+                        <label class="rb-tono rb-tono--{{ valor|lower }}">
+                            <input type="radio" name="{{ preferencias_form.tono.html_name }}" value="{{ valor }}" form="perfil"
+                                   {% if preferencias_form.tono.value == valor %}checked{% endif %}>
+                            {{ nombre }}
+                        </label>
+                    {% endfor %}
+                </div>
+                <p class="rb-campo__ayuda">Cambia cómo te hablamos en todo el sitio.</p>
+            </fieldset>
+
+            <fieldset class="rb-fieldset rb-espacio-arriba">
+                <legend class="rb-etiqueta">Restricciones alimentarias</legend>
+                <div class="rb-restricciones">
+                    {% for campo in restricciones_campos %}
+                        <label class="rb-restriccion">
+                            <input type="checkbox" name="{{ campo.html_name }}" form="perfil"{% if campo.value %} checked{% endif %}>
+                            {{ campo.label }}
+                        </label>
+                    {% endfor %}
+                </div>
+                <p class="rb-campo__ayuda">En las cartas te marcamos qué platos son aptos.</p>
+            </fieldset>
+
+            <ul class="rb-switches">
+                {% for campo in switches_campos %}
+                    <li>
+                        <label>
+                            {{ campo.label }}
+                            <input type="checkbox" class="rb-check-input" name="{{ campo.html_name }}" form="perfil"{% if campo.value %} checked{% endif %}>
+                        </label>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <button type="submit" form="perfil" class="rb-btn rb-espacio-arriba">Guardar cambios</button>
+        </section>
+    </div>
+</div>
+{% endblock %}
