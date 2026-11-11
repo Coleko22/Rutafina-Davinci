@@ -139,7 +139,10 @@ class Command(BaseCommand):
         # Pedidos disponibles para tomar
         _pedido(cli2, dir_lucia[0], 'pizza-violenta', {'Z1': 1, 'D1': 1}, T, timedelta(minutes=8), tarjeta)
         _pedido(cli2, dir_lucia[1], 'empanadas-del-infierno', {'X1': 1}, E, timedelta(minutes=3))
-        _pedido(cli2, dir_lucia[2], 'kiosco-rabioso', {'K1': 1, 'K2': 1, 'K3': 1, 'K4': 1}, B, timedelta(minutes=1))
+        kiosco = _pedido(cli2, dir_lucia[2], 'kiosco-rabioso', {'K1': 1, 'K2': 1, 'K3': 1, 'K4': 1}, B,
+                         timedelta(minutes=1))
+        # Pagado con billetera: solo se ofrece al repartidor una vez aprobado el pago
+        Pago.objects.filter(pedido=kiosco).update(estado_pago=Pago.Estado.APROBADO)
 
         # Favoritos de Thiago
         for slug, codigo in (('furia-burger', ''), ('empanadas-del-infierno', ''), ('furia-burger', 'B1'), ('pizza-violenta', 'Z1')):

@@ -8,6 +8,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.db import transaction
 from django.utils import timezone
 
+from . import avisos
 from .models import DetallePedido, Entrega, MetodoPago, Pago, Pedido
 
 
@@ -114,10 +115,15 @@ def cantidades_para_repetir(pedido):
 # --- Repartidor ---------------------------------------------------------------
 
 def pedidos_disponibles():
-    """Pedidos confirmados o en preparación que todavía no tienen repartidor."""
+    """
+    Pedidos confirmados o en preparación que todavía no tienen repartidor.
+    No se ofrecen los que pagan con billetera y todavía no volvieron de Mercado Pago
+    (pago pendiente): si el cliente no termina de pagar, nadie sale a buscarlo.
+    """
     return (Pedido.objects
             .filter(estado__in=[Pedido.Estado.CONFIRMADO, Pedido.Estado.PREPARACION],
                     entrega__repartidor__isnull=True)
+            .exclude(pago__estado_pago=Pago.Estado.PENDIENTE)
             .select_related('entrega', 'metodo_pago')
             .prefetch_related('detalles')
             .order_by('fecha_hora'))
@@ -142,6 +148,8 @@ def tomar_pedido(repartidor, pedido_id):
     if entrega is None or entrega.repartidor_id or entrega.pedido.estado not in (
             Pedido.Estado.CONFIRMADO, Pedido.Estado.PREPARACION):
         raise ErrorPedido('Ese pedido ya no está disponible.')
+    if Pago.objects.filter(pedido_id=pedido_id, estado_pago=Pago.Estado.PENDIENTE).exists():
+        raise ErrorPedido('Ese pedido todavía no está pago. Esperá a que el cliente termine de pagar.')
     entrega.repartidor = repartidor
     entrega.fecha_asignacion = timezone.now()
     entrega.estado_entrega = Entrega.Estado.ASIGNADO
@@ -183,6 +191,9 @@ def avanzar_pedido(repartidor):
             estado_pago=Pago.Estado.APROBADO)
     entrega.save()
     pedido.cambiar_estado(nuevo_pedido)
+    if nuevo_pedido == Pedido.Estado.EN_CAMINO:
+        # Se manda recién cuando se confirma la transacción (si algo falla, no avisamos de más)
+        transaction.on_commit(lambda: avisos.avisar_pedido_en_camino(pedido))
     return pedido
 
 

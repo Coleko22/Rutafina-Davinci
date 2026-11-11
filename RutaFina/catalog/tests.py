@@ -38,6 +38,23 @@ class BuscarEnCartaTests(TestCase):
             slugs = {c.slug for c in restaurante.categorias}
             self.assertTrue(all(i.categoria in slugs for i in restaurante.items), restaurante.slug)
 
+    def test_busqueda_por_etiqueta(self):
+        self.assertEqual([i.codigo for i in self.furia.buscar('vegano')], ['B4', 'P1', 'D1'])
+        self.assertEqual([i.codigo for i in self.furia.buscar('Sin TACC')], ['P1', 'D1'])
+        self.assertEqual([i.codigo for i in self.furia.buscar('apto celíaco, vegana')], ['P1', 'D1'])
+
+    def test_etiqueta_mas_palabras(self):
+        self.assertEqual([i.codigo for i in self.furia.buscar('papas sin tacc')], ['P1'])
+        self.assertEqual(restaurantes.interpretar_busqueda('Papas SIN TACC'), (['sin_tacc'], ['papas']))
+        self.assertEqual(restaurantes.interpretar_busqueda('sin'), ([], ['sin']))
+
+    def test_busqueda_global_por_etiqueta_solo_trae_platos_aptos(self):
+        resultados = restaurantes.buscar_global('sin tacc')
+        self.assertTrue(resultados)
+        for restaurante, items in resultados:
+            self.assertTrue(items, restaurante.slug)  # no aparece un comercio solo por llamarse "Sin ..."
+            self.assertTrue(all('sin_tacc' in i.etiquetas for i in items), restaurante.slug)
+
 
 class PaginaRestauranteTests(TestCase):
     url = reverse('detalle_restaurante', args=['furia-burger'])
@@ -111,6 +128,12 @@ class HomeYBusquedaTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, 'Furia Burger')
         self.assertContains(respuesta, 'Kiosco Rabioso')
+
+    def test_busqueda_por_etiqueta_en_el_buscador(self):
+        respuesta = self.client.get(reverse('buscar'), {'q': 'papas sin tacc'})
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'Papas Rabiosas')
+        self.assertNotContains(respuesta, 'Doble Furia')
 
     def test_busqueda_vacia_vuelve_al_home(self):
         self.assertRedirects(self.client.get(reverse('buscar'), {'q': ' '}), reverse('home'))

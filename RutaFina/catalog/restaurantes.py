@@ -11,6 +11,7 @@ archivo por consultas al ORM que devuelvan objetos con los mismos atributos.
 Para sumar un restaurante nuevo: definir otro `Restaurante(...)` más abajo y
 agregarlo a la tupla de `RESTAURANTES`.
 """
+import re
 import unicodedata
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -30,6 +31,33 @@ ETIQUETAS = {
     'vegano': 'Vegano',
     'sin_lactosa': 'Sin lactosa',
 }
+
+# Frases que la búsqueda entiende como una etiqueta (ya normalizadas: minúsculas y
+# sin tildes). Las más largas van primero para que 'apto celiaco' gane a 'celiaco'.
+SINONIMOS = {
+    'sin_tacc': ('apto celiaco', 'apto celiacos', 'sin tacc', 'sin gluten', 'celiaco', 'celiacos', 'celiaca'),
+    'vegetariano': ('vegetariano', 'vegetariana', 'vegetarianos', 'vegetarianas'),
+    'vegano': ('vegano', 'vegana', 'veganos', 'veganas', 'vegan'),
+    'sin_lactosa': ('sin lactosa', 'sin leche', 'deslactosado'),
+}
+
+
+def interpretar_busqueda(texto):
+    """
+    Separa el texto buscado en (etiquetas, palabras):
+    'papas sin TACC' -> (['sin_tacc'], ['papas']).
+    Así 'sin tacc' filtra los platos aptos en vez de traer todo lo que diga 'sin'.
+    """
+    resto = ' ' + re.sub(r'[^\w\s]', ' ', _normalizar(texto)) + ' '
+    resto = re.sub(r'\s+', ' ', resto)
+    etiquetas = []
+    for clave, frases in SINONIMOS.items():
+        for frase in frases:
+            if f' {frase} ' in resto:
+                resto = resto.replace(f' {frase} ', ' ')
+                if clave not in etiquetas:
+                    etiquetas.append(clave)
+    return etiquetas, resto.split()
 
 
 @dataclass(frozen=True)
@@ -99,10 +127,13 @@ class Restaurante:
         """
         Ítems de la carta, en el orden del menú. Filtra por categoría (slug) y/o
         por texto: alcanza con que el ítem contenga alguna de las palabras en su
-        nombre o descripción (sin distinguir mayúsculas ni tildes).
+        nombre o descripción (sin distinguir mayúsculas ni tildes). Si el texto
+        nombra una etiqueta ('sin tacc', 'vegana'...), solo quedan los ítems que la tienen.
         """
         items = [i for i in self.items if not categoria or i.categoria == categoria]
-        palabras = _normalizar(texto).split()
+        etiquetas, palabras = interpretar_busqueda(texto)
+        if etiquetas:
+            items = [i for i in items if all(e in i.etiquetas for e in etiquetas)]
         if palabras:
             items = [
                 i for i in items
@@ -388,14 +419,16 @@ def buscar_global(texto):
     """
     Búsqueda del header: [(restaurante, [items que coinciden])]. Un restaurante
     aparece si coincide su nombre/cocina (con toda la carta) o algún ítem.
+    Si se busca por etiqueta ('sin tacc'), solo aparecen los que tienen platos aptos.
     """
-    palabras = _normalizar(texto).split()
-    if not palabras:
+    etiquetas, palabras = interpretar_busqueda(texto)
+    if not etiquetas and not palabras:
         return []
     resultados = []
     for restaurante in RESTAURANTES.values():
         items = restaurante.buscar(texto)
         propio = _normalizar(f'{restaurante.nombre} {restaurante.cocina}')
-        if items or any(p in propio for p in palabras):
+        coincide_nombre = not etiquetas and any(p in propio for p in palabras)
+        if items or coincide_nombre:
             resultados.append((restaurante, items))
     return resultados

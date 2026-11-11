@@ -23,6 +23,8 @@ TEXTOS = {
         'historial_2': 'ya te comiste.',
         'repartidor_2': 'A la calle.',
         'vacio': 'Todavía no agregaste nada. Elegí algo de la carta y aparece acá.',
+        'mail_sale': 'Ya salió. Abrí la puerta.',
+        'mail_promos': 'Promos. Aprovechalas o llorá.',
     },
     'ENOJADO': {
         'hero_1': '¿Hambre?',
@@ -40,6 +42,8 @@ TEXTOS = {
         'historial_2': 'todos acá.',
         'repartidor_2': 'Hay calle.',
         'vacio': 'Todavía no agregaste nada. Elegí algo de la carta y aparece acá.',
+        'mail_sale': 'Tu pedido ya salió.',
+        'mail_promos': 'Promos vigentes. Dale.',
     },
     'TRANQUI': {
         'hero_1': '¿Tenés hambre?',
@@ -57,6 +61,8 @@ TEXTOS = {
         'historial_2': 'y favoritos.',
         'repartidor_2': 'Buen turno.',
         'vacio': 'Tu carrito está vacío. Cuando agregues algo de la carta, aparece acá.',
+        'mail_sale': 'Tu pedido está en camino',
+        'mail_promos': 'Promos de la semana',
     },
 }
 

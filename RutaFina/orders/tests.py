@@ -1,5 +1,8 @@
 from decimal import Decimal
+from io import StringIO
 
+from django.core import mail
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -246,3 +249,63 @@ class RepartidorTests(Base):
         self.client.post(reverse('repartidor_en_linea'))
         self.rep.refresh_from_db()
         self.assertFalse(self.rep.disponibilidad)
+
+
+    def test_no_se_ofrece_un_pedido_con_billetera_sin_pagar(self):
+        self.client.force_login(self.user)
+        self.llenar_carrito()
+        self.confirmar('MercadoPago')
+        billetera = Pedido.objects.latest('id')
+        self.client.force_login(self.martin)
+
+        self.assertNotContains(self.client.get(reverse('panel_repartidor')), f'#{billetera.id} · Furia Burger')
+        respuesta = self.client.post(reverse('repartidor_tomar', args=[billetera.id]), follow=True)
+        self.assertContains(respuesta, 'todavía no está pago')
+        billetera.refresh_from_db()
+        self.assertFalse(billetera.tiene_repartidor)
+
+        # Cuando Mercado Pago aprueba, ya aparece
+        Pago.objects.filter(pedido=billetera).update(estado_pago=Pago.Estado.APROBADO)
+        self.assertContains(self.client.get(reverse('panel_repartidor')), f'#{billetera.id} · Furia Burger')
+
+    def _llevar_hasta_en_camino(self):
+        self.client.post(reverse('repartidor_tomar', args=[self.pedido.id]))
+        self.client.post(reverse('repartidor_avanzar'))  # retirado
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse('repartidor_avanzar'))  # en camino
+
+    def test_avisa_por_mail_cuando_el_pedido_sale(self):
+        self._llevar_hasta_en_camino()
+        self.assertEqual(len(mail.outbox), 1)
+        aviso = mail.outbox[0]
+        self.assertEqual(aviso.to, ['thiago@mail.com'])
+        self.assertIn(f'pedido #{self.pedido.id}', aviso.subject)
+        self.assertIn('Martín R.', aviso.body)
+        self.assertIn('Tené listo el efectivo', aviso.body)
+
+    def test_no_avisa_si_el_cliente_lo_desactivo(self):
+        Cliente.objects.filter(pk=self.cliente.pk).update(avisar_pedido_sale=False)
+        self._llevar_hasta_en_camino()
+        self.pedido.refresh_from_db()
+        self.assertEqual(self.pedido.estado, Pedido.Estado.EN_CAMINO)
+        self.assertEqual(mail.outbox, [])
+
+
+class EnviarPromosTests(Base):
+    def test_solo_a_quienes_eligieron_recibir_promos(self):
+        ana = User.objects.create_user('ana@mail.com', 'ana', 'x', first_name='Ana')
+        Cliente.objects.create(usuario=ana, recibir_promos=True, tono=Cliente.Tono.TRANQUI)
+        salida = StringIO()
+        call_command('enviar_promos', stdout=salida)
+        self.assertEqual(len(mail.outbox), 1)  # Thiago no las pidió
+        self.assertEqual(mail.outbox[0].to, ['ana@mail.com'])
+        self.assertEqual(mail.outbox[0].subject, 'Promos de la semana')
+        self.assertIn('FURIA2X1', mail.outbox[0].body)
+        self.assertIn('1 mail enviado', salida.getvalue())
+
+    def test_dry_run_no_manda_nada(self):
+        Cliente.objects.filter(pk=self.cliente.pk).update(recibir_promos=True)
+        salida = StringIO()
+        call_command('enviar_promos', '--dry-run', stdout=salida)
+        self.assertEqual(mail.outbox, [])
+        self.assertIn('a 1 cliente', salida.getvalue())
