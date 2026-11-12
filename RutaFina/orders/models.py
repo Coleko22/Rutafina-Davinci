@@ -70,6 +70,8 @@ class Pedido(models.Model):
 
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.SET_NULL, null=True, related_name='pedidos')
     promocion = models.ForeignKey(Promocion, on_delete=models.SET_NULL, null=True, blank=True, related_name='pedidos')
+    cupon = models.ForeignKey('catalog.Cupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='pedidos')
+    
     promo_codigo = models.CharField(max_length=30, blank=True)
     cupon_codigo = models.CharField(max_length=30, blank=True)
 
