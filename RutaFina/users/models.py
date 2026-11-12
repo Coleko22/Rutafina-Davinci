@@ -145,34 +145,53 @@ class Direccion(models.Model):
 
 
 class Favorito(models.Model):
-    """
-    Un comercio (item_codigo vacío) o un producto marcado con el corazón.
-    Guarda slug/código porque los restaurantes todavía viven en catalog/restaurantes.py.
-    """
+    """Un comercio (producto=None) o un producto marcado con el corazón."""
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favoritos')
-    restaurante_slug = models.SlugField(max_length=80)
-    item_codigo = models.CharField(max_length=20, blank=True)
+    comercio = models.ForeignKey('catalog.Comercio', on_delete=models.CASCADE, related_name='favoritos')
+    producto = models.ForeignKey(
+        'catalog.Producto',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='favoritos',
+    )
     creado = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-creado']
         constraints = [
-            models.UniqueConstraint(fields=['usuario', 'restaurante_slug', 'item_codigo'], name='favorito_unico'),
+            models.UniqueConstraint(
+                fields=['usuario', 'comercio', 'producto'],
+                name='favorito_unico_con_producto',
+            ),
+            models.UniqueConstraint(
+                fields=['usuario', 'comercio'],
+                condition=models.Q(producto__isnull=True),
+                name='favorito_comercio_unico',
+            ),
         ]
 
     def __str__(self):
-        return f"{self.usuario} ♥ {self.restaurante_slug} {self.item_codigo}".strip()
+        if self.producto:
+            return f"{self.usuario} ♥ {self.comercio.nombre} - {self.producto.nombre}"
+        return f"{self.usuario} ♥ {self.comercio.nombre}"
 
     @property
     def es_producto(self):
-        return bool(self.item_codigo)
+        return self.producto_id is not None
 
     @property
     def restaurante(self):
-        from catalog import restaurantes
-        return restaurantes.obtener(self.restaurante_slug)
+        return self.comercio
+
+    @property
+    def restaurante_slug(self):
+        return self.comercio.slug
 
     @property
     def item(self):
-        restaurante = self.restaurante
-        return restaurante.item(self.item_codigo) if restaurante and self.item_codigo else None
+        return self.producto
+
+    @property
+    def item_codigo(self):
+        return self.producto.codigo if self.producto else ''

@@ -50,12 +50,14 @@ def crear_pedido(cliente, carrito, direccion, metodo_tipo, tarjeta=None):
 
     pedido = Pedido(
         cliente=cliente,
+        comercio=restaurante,
         restaurante_slug=restaurante.slug,
         restaurante_nombre=restaurante.nombre,
         restaurante_iniciales=restaurante.iniciales,
         restaurante_direccion=restaurante.direccion,
         metodo_pago=metodo,
         promo_codigo=carrito.promo.codigo if carrito.promo else '',
+        cupon=carrito.cupon if carrito.cupon and carrito.descuento_cupon else None,
         cupon_codigo=carrito.cupon.codigo if carrito.cupon and carrito.descuento_cupon else '',
         direccion=direccion,
         direccion_texto=direccion.completa,
@@ -72,8 +74,13 @@ def crear_pedido(cliente, carrito, direccion, metodo_tipo, tarjeta=None):
 
     DetallePedido.objects.bulk_create([
         DetallePedido(
-            pedido=pedido, item_codigo=linea.item.codigo, nombre=linea.item.nombre,
-            cantidad=linea.cantidad, precio_unitario=linea.item.precio, subtotal=linea.subtotal,
+            pedido=pedido,
+            producto=linea.item,
+            item_codigo=linea.item.codigo,
+            nombre=linea.item.nombre,
+            cantidad=linea.cantidad,
+            precio_unitario=linea.item.precio,
+            subtotal=linea.subtotal,
         )
         for linea in carrito.lineas
     ])

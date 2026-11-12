@@ -12,6 +12,7 @@ __pycache__/
 # Base de datos local
 db.sqlite3
 db.sqlite3-journal
+*.sql
 
 # Archivos multimedia subidos por usuarios (cuando agreguemos fotos de comida)
 /media/

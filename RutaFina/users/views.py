@@ -198,13 +198,22 @@ def direccion_principal_view(request, direccion_id):
 @login_required
 @require_POST
 def favorito_toggle(request):
-    slug = request.POST.get('slug', '')
+    slug = request.POST.get('slug', '').strip()
     codigo = request.POST.get('codigo', '').strip()
-    restaurante = restaurantes.obtener(slug)
-    if restaurante is None or (codigo and restaurante.item(codigo) is None):
-        raise Http404('Ese comercio o producto no existe.')
+    comercio = restaurantes.obtener(slug)
+    if comercio is None:
+        raise Http404('Ese comercio no existe.')
+    producto = None
+    if codigo:
+        producto = comercio.item(codigo)
+        if producto is None:
+            raise Http404('Ese producto no existe.')
+
     favorito, creado = Favorito.objects.get_or_create(
-        usuario=request.user, restaurante_slug=slug, item_codigo=codigo)
+        usuario=request.user,
+        comercio=comercio,
+        producto=producto,
+    )
     if not creado:
         favorito.delete()
     return redirect(_next_seguro(request, reverse('historial') + '#favoritos'))
@@ -213,9 +222,12 @@ def favorito_toggle(request):
 def favoritos_de(user):
     """
     Claves 'slug:codigo' marcadas por el usuario ('slug:' para comercios), para
-    pintar los corazones. En el template: {% if rest.slug|add:':' in favoritos %}.
+    pintar los corazones en los templates.
     """
     if not user.is_authenticated:
         return set()
-    return {f'{slug}:{codigo}' for slug, codigo in
-            Favorito.objects.filter(usuario=user).values_list('restaurante_slug', 'item_codigo')}
+    filas = Favorito.objects.filter(usuario=user).select_related('comercio', 'producto')
+    return {
+        f"{fav.comercio.slug}:{fav.producto.codigo if fav.producto else ''}"
+        for fav in filas
+    }
